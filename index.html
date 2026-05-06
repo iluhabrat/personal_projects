@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iluhabrat — Projects</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0c0c1d;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    h1 span { color: #4ade80; }
+    .sub { color: #475569; font-size: 14px; margin-bottom: 40px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 780px;
+    }
+    a {
+      background: #13132b;
+      border: 1px solid #1e1e3a;
+      border-radius: 14px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+      display: block;
+    }
+    a:hover { border-color: #4ade80; transform: translateY(-3px); box-shadow: 0 8px 32px rgba(74,222,128,0.1); }
+    .emoji { font-size: 36px; margin-bottom: 12px; }
+    .name { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .desc { font-size: 12px; color: #475569; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1>iluhabrat <span>·</span> Projects</h1>
+  <p class="sub">A collection of web apps built from scratch</p>
+  <div class="grid">
+    <a href="tetris/">
+      <div class="emoji">🟦</div>
+      <div class="name">Tetris</div>
+      <div class="desc">Classic Tetris with ghost piece, DAS controls, and scoring.</div>
+    </a>
+    <a href="snake/">
+      <div class="emoji">🐍</div>
+      <div class="name">Snake</div>
+      <div class="desc">Snake with power-ups, chiptune music, 3 game modes & achievements.</div>
+    </a>
+    <a href="da-interview-prep/">
+      <div class="emoji">📊</div>
+      <div class="name">DA Interview Prep</div>
+      <div class="desc">52 questions, quiz mode, stats lab & SQL reference for data analyst interviews.</div>
+    </a>
+    <a href="rental-platform/">
+      <div class="emoji">🏢</div>
+      <div class="name">SpaceBook</div>
+      <div class="desc">Rental space booking platform with live calendar and booking management.</div>
+    </a>
+  </div>
+</body>
+</html>
