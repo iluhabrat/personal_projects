@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JapanStyle — Японские товары</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #c0392b;
+      --red-light: #e74c3c;
+      --pink: #f8b4b4;
+      --dark: #1a1a1a;
+      --gray: #6b7280;
+      --light: #f9f9f9;
+      --border: #e5e7eb;
+      --white: #ffffff;
+      --gold: #f59e0b;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: var(--dark);
+      background: var(--white);
+      font-size: 14px;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--red);
+      color: #fff;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 40px;
+    }
+    .topbar-social { display: flex; gap: 12px; }
+    .topbar-social a { color: #fff; opacity: 0.85; font-size: 13px; }
+    .topbar-social a:hover { opacity: 1; }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 40px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: var(--red);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      color: #fff;
+    }
+    .logo-text { line-height: 1.2; }
+    .logo-text strong { font-size: 18px; font-weight: 800; color: var(--red); display: block; }
+    .logo-text span { font-size: 11px; color: var(--gray); }
+
+    .search-bar {
+      flex: 1;
+      max-width: 560px;
+      display: flex;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .search-bar:focus-within { border-color: var(--red); }
+    .search-bar input {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      background: none;
+    }
+    .search-bar button {
+      background: var(--red);
+      border: none;
+      color: #fff;
+      padding: 0 18px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-bar button:hover { background: var(--red-light); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .hdr-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      color: var(--dark);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      position: relative;
+    }
+    .hdr-btn:hover { background: var(--light); }
+    .hdr-btn .icon { font-size: 20px; }
+    .badge {
+      position: absolute;
+      top: 2px; right: 6px;
+      background: var(--red);
+      color: #fff;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      min-width: 16px;
+      text-align: center;
+    }
+    .wa-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #25d366;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .wa-btn:hover { opacity: 0.9; }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--dark);
+      position: relative;
+      z-index: 150;
+    }
+    .nav-list {
+      display: flex;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 40px;
+    }
+    .nav-item { position: relative; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 13px 16px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .nav-link:hover, .nav-item:hover .nav-link { background: rgba(255,255,255,0.1); }
+    .nav-link .arrow { font-size: 10px; opacity: 0.7; transition: transform 0.2s; }
+    .nav-item:hover .arrow { transform: rotate(180deg); }
+
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 0 0 12px 12px;
+      min-width: 200px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      z-index: 300;
+    }
+    .nav-item:hover .dropdown { display: block; }
+    .dropdown a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      color: var(--dark);
+      font-size: 13px;
+      transition: background 0.1s;
+      border-bottom: 1px solid var(--border);
+    }
+    .dropdown a:last-child { border-bottom: none; }
+    .dropdown a:hover { background: var(--light); color: var(--red); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      height: 480px;
+    }
+    .hero-slides { display: flex; height: 100%; transition: transform 0.5s ease; }
+    .hero-slide {
+      min-width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 80px;
+      position: relative;
+    }
+    .slide-1 { background: linear-gradient(135deg, #1a0a0a 0%, #3d0c0c 50%, #c0392b 100%); }
+    .slide-2 { background: linear-gradient(135deg, #0a0a1a 0%, #0c0c3d 50%, #2c3e95 100%); }
+    .slide-3 { background: linear-gradient(135deg, #0a1a0a 0%, #0c3d1a 50%, #27ae60 100%); }
+
+    .slide-deco {
+      position: absolute;
+      right: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 200px;
+      opacity: 0.12;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .slide-content { max-width: 520px; }
+    .slide-tag {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .slide-title {
+      font-size: 42px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 14px;
+    }
+    .slide-title span { color: #ffd700; }
+    .slide-sub { font-size: 15px; color: rgba(255,255,255,0.75); margin-bottom: 28px; line-height: 1.6; }
+    .slide-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      color: var(--red);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+    .slide-btn:hover { background: #ffd700; color: var(--dark); }
+
+    .hero-dots {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .dot.active { background: #fff; width: 24px; border-radius: 4px; }
+
+    .hero-prev, .hero-next {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.15s;
+      z-index: 10;
+    }
+    .hero-prev:hover, .hero-next:hover { background: rgba(255,255,255,0.4); }
+    .hero-prev { left: 20px; }
+    .hero-next { right: 20px; }
+
+    /* ── CATEGORIES STRIP ── */
+    .section { padding: 48px 40px; max-width: 1200px; margin: 0 auto; }
+    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; }
+    .section-title { font-size: 22px; font-weight: 800; }
+    .section-title span { color: var(--red); }
+    .section-link { font-size: 13px; color: var(--red); font-weight: 600; }
+    .section-link:hover { text-decoration: underline; }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    .cat-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 10px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .cat-card:hover { border-color: var(--red); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(192,57,43,0.12); }
+    .cat-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .cat-name { font-size: 12px; font-weight: 700; color: var(--dark); }
+    .cat-count { font-size: 11px; color: var(--gray); }
+
+    /* ── PRODUCTS GRID ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .product-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: var(--white);
+    }
+    .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+    .product-card:hover .add-to-cart { opacity: 1; transform: translateY(0); }
+
+    .product-img {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .product-badges {
+      position: absolute;
+      top: 10px; left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .badge-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      color: #fff;
+    }
+    .badge-new { background: var(--red); }
+    .badge-hit { background: #f59e0b; }
+    .badge-sale { background: #27ae60; }
+    .badge-pre { background: #8b5cf6; }
+
+    .wishlist-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 32px; height: 32px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.15s;
+      z-index: 1;
+    }
+    .wishlist-btn:hover { border-color: var(--red); color: var(--red); }
+    .wishlist-btn.active { background: #fff0f0; border-color: var(--red); }
+
+    .product-body { padding: 14px; }
+    .product-brand { font-size: 11px; color: var(--gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .product-name { font-size: 13px; font-weight: 700; line-height: 1.4; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-rating { display: flex; align-items: center; gap: 4px; margin-bottom: 10px; }
+    .stars { color: var(--gold); font-size: 12px; }
+    .rating-num { font-size: 12px; color: var(--gray); }
+    .product-price { display: flex; align-items: baseline; gap: 8px; }
+    .price-main { font-size: 18px; font-weight: 900; color: var(--red); }
+    .price-old { font-size: 13px; color: var(--gray); text-decoration: line-through; }
+    .add-to-cart {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    .add-to-cart:hover { background: var(--red-light); }
+
+    /* ── PROMO BANNER ── */
+    .promo-banner {
+      margin: 0 40px;
+      max-width: 1120px;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a0a0a, #c0392b);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 60px;
+      position: relative;
+    }
+    .promo-deco {
+      position: absolute;
+      right: 60px;
+      font-size: 120px;
+      opacity: 0.15;
+    }
+    .promo-content { max-width: 500px; }
+    .promo-tag { font-size: 11px; font-weight: 700; color: #ffd700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+    .promo-title { font-size: 32px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 10px; }
+    .promo-sub { font-size: 14px; color: rgba(255,255,255,0.75); margin-bottom: 24px; }
+    .promo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffd700;
+      color: var(--dark);
+      font-size: 14px;
+      font-weight: 800;
+      padding: 12px 28px;
+      border-radius: 10px;
+      transition: opacity 0.15s;
+    }
+    .promo-btn:hover { opacity: 0.9; }
+    .promo-stats { display: flex; gap: 32px; }
+    .promo-stat { text-align: center; }
+    .promo-stat-num { font-size: 36px; font-weight: 900; color: #fff; }
+    .promo-stat-label { font-size: 12px; color: rgba(255,255,255,0.65); }
+
+    /* ── FEATURES ── */
+    .features {
+      background: var(--light);
+      padding: 40px;
+    }
+    .features-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .feature-icon { font-size: 36px; margin-bottom: 12px; }
+    .feature-title { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+    .feature-desc { font-size: 12px; color: var(--gray); line-height: 1.6; }
+
+    /* ── REVIEWS ── */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .review-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .review-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .review-name { font-size: 14px; font-weight: 700; }
+    .review-date { font-size: 11px; color: var(--gray); }
+    .review-stars { color: var(--gold); font-size: 14px; margin-bottom: 8px; }
+    .review-text { font-size: 13px; color: #374151; line-height: 1.6; }
+
+    /* ── BRANDS ── */
+    .brands-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    .brand-logo {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--gray);
+      opacity: 0.5;
+      letter-spacing: 1px;
+      transition: opacity 0.2s;
+      cursor: pointer;
+    }
+    .brand-logo:hover { opacity: 1; color: var(--dark); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      color: #9ca3af;
+      padding: 48px 40px 24px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto 40px;
+    }
+    .footer-brand { }
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .footer-logo-icon {
+      width: 36px; height: 36px;
+      background: var(--red);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .footer-logo-text { font-size: 16px; font-weight: 800; color: #fff; }
+    .footer-desc { font-size: 13px; line-height: 1.7; margin-bottom: 16px; }
+    .footer-socials { display: flex; gap: 8px; }
+    .social-btn {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      background: #2a2a2a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    .social-btn:hover { background: var(--red); }
+
+    .footer-col h4 { color: #fff; font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+    .footer-col ul li { margin-bottom: 10px; }
+    .footer-col ul a { font-size: 13px; color: #9ca3af; transition: color 0.15s; }
+    .footer-col ul a:hover { color: #fff; }
+
+    .contact-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+    .contact-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .contact-text { font-size: 13px; line-height: 1.5; }
+    .contact-text strong { color: #fff; display: block; font-size: 12px; margin-bottom: 2px; }
+
+    .footer-bottom {
+      border-top: 1px solid #2a2a2a;
+      padding-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      font-size: 12px;
+    }
+    .kaspi-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f8c301;
+      color: #1a1a1a;
+      border-radius: 8px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* ── CART DRAWER ── */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .cart-drawer {
+      position: fixed;
+      top: 0; right: 0;
+      width: 380px; height: 100vh;
+      background: var(--white);
+      z-index: 500;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-drawer.open { transform: translateX(0); }
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .drawer-header h3 { font-size: 18px; font-weight: 800; }
+    .drawer-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .cart-empty { text-align: center; padding: 60px 0; color: var(--gray); }
+    .cart-empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .cart-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-item-img {
+      width: 64px; height: 64px;
+      border-radius: 10px;
+      background: var(--light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .cart-item-price { font-size: 15px; font-weight: 800; color: var(--red); }
+    .cart-item-qty { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .qty-btn { width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .qty-val { font-size: 14px; font-weight: 700; min-width: 20px; text-align: center; }
+    .cart-remove { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 16px; }
+
+    .drawer-footer { padding: 20px 24px; border-top: 1px solid var(--border); }
+    .cart-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; margin-bottom: 16px; }
+    .checkout-btn { width: 100%; background: var(--red); color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+    .checkout-btn:hover { background: var(--red-light); }
+    .kaspi-btn { width: 100%; background: #f8c301; color: #1a1a1a; border: none; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: opacity 0.15s; }
+    .kaspi-btn:hover { opacity: 0.9; }
+
+    /* ── PRODUCT MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .product-modal {
+      background: var(--white);
+      border-radius: 20px;
+      max-width: 700px;
+      width: 100%;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+      transform: scale(0.95);
+      transition: transform 0.25s;
+    }
+    .modal-overlay.open .product-modal { transform: scale(1); }
+    .modal-img {
+      width: 300px;
+      min-height: 340px;
+      background: var(--light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 100px;
+      flex-shrink: 0;
+    }
+    .modal-body { padding: 28px; flex: 1; }
+    .modal-brand { font-size: 11px; color: var(--gray); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .modal-name { font-size: 20px; font-weight: 800; line-height: 1.3; margin-bottom: 10px; }
+    .modal-rating { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
+    .modal-price { font-size: 28px; font-weight: 900; color: var(--red); margin-bottom: 6px; }
+    .modal-old { font-size: 15px; color: var(--gray); text-decoration: line-through; margin-bottom: 16px; }
+    .modal-desc { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 20px; }
+    .modal-add {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: background 0.15s;
+    }
+    .modal-add:hover { background: var(--red-light); }
+    .modal-close-btn {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      border-radius: 50%;
+      width: 36px; height: 36px;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--dark);
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 900;
+      pointer-events: none;
+      transition: transform 0.25s;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      header { padding: 12px 16px; gap: 12px; }
+      .topbar { padding: 6px 16px; }
+      .wa-btn span { display: none; }
+      .nav-list { padding: 0 8px; overflow-x: auto; }
+      .section { padding: 32px 16px; }
+      .cat-grid { grid-template-columns: repeat(3, 1fr); }
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .features-inner { grid-template-columns: repeat(2, 1fr); }
+      .reviews-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .promo-banner { flex-direction: column; gap: 24px; text-align: center; padding: 32px 24px; }
+      .promo-stats { justify-content: center; }
+      .promo-deco { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span>🚚 Бесплатная доставка от 15 000 ₸ | Доставка по всему Казахстану</span>
+  <div class="topbar-social">
+    <a href="#">📘 Facebook</a>
+    <a href="#">📸 Instagram</a>
+    <a href="#">▶️ YouTube</a>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🌸</div>
+    <div class="logo-text">
+      <strong>JapanStyle</strong>
+      <span>Японские товары</span>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" placeholder="Поиск товаров..." id="searchInput" onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">🔍</button>
+  </div>
+
+  <div class="header-actions">
+    <button class="hdr-btn" onclick="openModal(PRODUCTS[0])">
+      <span class="icon">👤</span>
+      <span>Войти</span>
+    </button>
+    <button class="hdr-btn">
+      <span class="icon">❤️</span>
+      <span>Избранное</span>
+      <span class="badge" id="wishlistBadge" style="display:none">0</span>
+    </button>
+    <button class="hdr-btn" onclick="openCart()">
+      <span class="icon">🛒</span>
+      <span>Корзина</span>
+      <span class="badge" id="cartBadge" style="display:none">0</span>
+    </button>
+    <button class="wa-btn" onclick="toast('Открываем WhatsApp...')">
+      💬 <span>WhatsApp</span>
+    </button>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <ul class="nav-list">
+    <li class="nav-item">
+      <a class="nav-link" href="#">Детям <span class="arrow">▾</span></a>
+      <div class="dropdown">
+        <a href="#">👶 Средства гигиены</a>
+        <a href="#">🧴 Средства для стирки</a>
+        <a href="#">🧸 Игрушки и аксессуары</a>
+        <a href="#">🍼 Питание и смеси</a>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Для дома <span class="arrow">▾</span></a>
+      <div class="dropdown">
+        <a href="#">🧹 Средства для уборки</a>
+        <a href="#">🍽 Для посуды</a>
+        <a href="#">👕 Уход за одеждой</a>
+        <a href="#">🪴 Ароматизаторы</a>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Для женщин <span class="arrow">▾</span></a>
+      <div class="dropdown">
+        <a href="#">💄 Косметика</a>
+        <a href="#">🧖 Уход за кожей</a>
+        <a href="#">💇 Уход за волосами</a>
+        <a href="#">🌸 Ароматы и парфюм</a>
+        <a href="#">🪥 Гигиена</a>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Для мужчин <span class="arrow">▾</span></a>
+      <div class="dropdown">
+        <a href="#">🪒 Уход за кожей</a>
+        <a href="#">💈 Уход за волосами</a>
+        <a href="#">🧴 Гигиена</a>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Одежда <span class="arrow">▾</span></a>
+      <div class="dropdown">
+        <a href="#">👗 Женская одежда</a>
+        <a href="#">👔 Мужская одежда</a>
+        <a href="#">👟 Обувь</a>
+        <a href="#">👜 Аксессуары</a>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Аптека <span class="arrow">▾</span></a>
+      <div class="dropdown">
+        <a href="#">💊 Витамины и БАДы</a>
+        <a href="#">🩹 Медицинские товары</a>
+        <a href="#">🌿 Натуральные средства</a>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#">Блог</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#" style="color:#ffd700">🔥 Акции</a>
+    </li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-slides" id="heroSlides">
+    <div class="hero-slide slide-1">
+      <div class="slide-deco">🌸</div>
+      <div class="slide-content">
+        <div class="slide-tag">✨ Новая коллекция</div>
+        <h1 class="slide-title">Японская<br><span>косметика</span><br>для вас</h1>
+        <p class="slide-sub">Более 2000 оригинальных товаров прямо из Кобе, Японии. Доставка по всему Казахстану.</p>
+        <a href="#" class="slide-btn">Смотреть каталог →</a>
+      </div>
+    </div>
+    <div class="hero-slide slide-2">
+      <div class="slide-deco">🏯</div>
+      <div class="slide-content">
+        <div class="slide-tag">🏠 Для дома</div>
+        <h1 class="slide-title">Японское<br><span>качество</span><br>в каждом доме</h1>
+        <p class="slide-sub">Средства для уборки, стирки и ухода за домом от ведущих японских брендов.</p>
+        <a href="#" class="slide-btn">Смотреть товары →</a>
+      </div>
+    </div>
+    <div class="hero-slide slide-3">
+      <div class="slide-deco">🌿</div>
+      <div class="slide-content">
+        <div class="slide-tag">💊 Японская аптека</div>
+        <h1 class="slide-title">Здоровье<br>с <span>Японией</span></h1>
+        <p class="slide-sub">Витамины, БАДы и натуральные средства, отобранные нашим косметологом и нутрициологом.</p>
+        <a href="#" class="slide-btn">В аптеку →</a>
+      </div>
+    </div>
+  </div>
+  <button class="hero-prev" onclick="slideHero(-1)">‹</button>
+  <button class="hero-next" onclick="slideHero(1)">›</button>
+  <div class="hero-dots" id="heroDots">
+    <div class="dot active" onclick="goSlide(0)"></div>
+    <div class="dot" onclick="goSlide(1)"></div>
+    <div class="dot" onclick="goSlide(2)"></div>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Категории <span>товаров</span></h2>
+    <a href="#" class="section-link">Все категории →</a>
+  </div>
+  <div class="cat-grid">
+    <div class="cat-card">
+      <div class="cat-icon" style="background:#fef3f2">👶</div>
+      <div class="cat-name">Детям</div>
+      <div class="cat-count">124 товара</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon" style="background:#f0fdf4">🏠</div>
+      <div class="cat-name">Для дома</div>
+      <div class="cat-count">318 товаров</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon" style="background:#fdf2f8">💄</div>
+      <div class="cat-name">Для женщин</div>
+      <div class="cat-count">542 товара</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon" style="background:#eff6ff">🧔</div>
+      <div class="cat-name">Для мужчин</div>
+      <div class="cat-count">186 товаров</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon" style="background:#fefce8">👗</div>
+      <div class="cat-name">Одежда</div>
+      <div class="cat-count">294 товара</div>
+    </div>
+    <div class="cat-card">
+      <div class="cat-icon" style="background:#f0fdf4">💊</div>
+      <div class="cat-name">Аптека</div>
+      <div class="cat-count">97 товаров</div>
+    </div>
+  </div>
+</div>
+
+<!-- BEST SELLERS -->
+<div class="section" style="padding-top:0">
+  <div class="section-header">
+    <h2 class="section-title">🔥 Хиты <span>продаж</span></h2>
+    <a href="#" class="section-link">Смотреть все →</a>
+  </div>
+  <div class="products-grid" id="bestsellersGrid"></div>
+</div>
+
+<!-- PROMO BANNER -->
+<div style="padding: 0 40px; max-width:1280px; margin:0 auto 48px;">
+  <div class="promo-banner">
+    <div class="promo-deco">🌸</div>
+    <div class="promo-content">
+      <div class="promo-tag">🎁 Специальное предложение</div>
+      <div class="promo-title">Прямо из Кобе,<br>Японии — для вас</div>
+      <div class="promo-sub">Более 15 лет работаем для жителей Казахстана. Гарантия подлинности каждого товара.</div>
+      <a href="#" class="promo-btn">Узнать о нас →</a>
+    </div>
+    <div class="promo-stats">
+      <div class="promo-stat">
+        <div class="promo-stat-num">2000+</div>
+        <div class="promo-stat-label">Товаров</div>
+      </div>
+      <div class="promo-stat">
+        <div class="promo-stat-num">15+</div>
+        <div class="promo-stat-label">Лет опыта</div>
+      </div>
+      <div class="promo-stat">
+        <div class="promo-stat-num">50K+</div>
+        <div class="promo-stat-label">Покупателей</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ARRIVALS -->
+<div class="section" style="padding-top:0">
+  <div class="section-header">
+    <h2 class="section-title">✨ Новые <span>поступления</span></h2>
+    <a href="#" class="section-link">Смотреть все →</a>
+  </div>
+  <div class="products-grid" id="newArrivalsGrid"></div>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+  <div class="features-inner">
+    <div class="feature-card">
+      <div class="feature-icon">🚢</div>
+      <div class="feature-title">Прямые поставки из Японии</div>
+      <div class="feature-desc">Работаем напрямую с поставщиками в Кобе. 100% оригинальные товары.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🚚</div>
+      <div class="feature-title">Доставка по Казахстану</div>
+      <div class="feature-desc">Доставляем в любой город. Бесплатно от 15 000 ₸. Магазины в Алматы и Астане.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👩‍⚕️</div>
+      <div class="feature-title">Экспертный отбор</div>
+      <div class="feature-desc">Каждый товар проверен нашим косметологом и нутрициологом.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💳</div>
+      <div class="feature-title">Оплата Kaspi</div>
+      <div class="feature-desc">Удобная оплата через Kaspi Pay, Kaspi рассрочка и все карты Казахстана.</div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<div class="section">
+  <div class="section-header">
+    <h2 class="section-title">Отзывы <span>покупателей</span></h2>
+    <a href="#" class="section-link">Все отзывы →</a>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar" style="background:#e74c3c">А</div>
+        <div><div class="review-name">Айгерим С.</div><div class="review-date">15 апреля 2025</div></div>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">Заказываю уже 3 года! Косметика Shiseido всегда оригинальная, упаковка идеальная. Доставка быстрая. Рекомендую всем подругам!</div>
+    </div>
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar" style="background:#3498db">Д</div>
+        <div><div class="review-name">Данияр К.</div><div class="review-date">2 мая 2025</div></div>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">Купил уходовую косметику для мужчин. Очень доволен — кожа реально стала лучше. Цены ниже чем в магазинах, качество выше.</div>
+    </div>
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar" style="background:#27ae60">М</div>
+        <div><div class="review-name">Мадина Т.</div><div class="review-date">28 апреля 2025</div></div>
+      </div>
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">Детские средства Lion отличные, нежные и без аллергии. Беру для своего малыша уже год. Очень доверяю этому магазину!</div>
+    </div>
+  </div>
+</div>
+
+<!-- BRANDS -->
+<div class="section" style="padding-top:0">
+  <div class="section-header">
+    <h2 class="section-title">Наши <span>бренды</span></h2>
+  </div>
+  <div class="brands-strip">
+    <div class="brand-logo">SHISEIDO</div>
+    <div class="brand-logo">LION</div>
+    <div class="brand-logo">KAO</div>
+    <div class="brand-logo">KANEBO</div>
+    <div class="brand-logo">ROHTO</div>
+    <div class="brand-logo">SATO</div>
+    <div class="brand-logo">KOSE</div>
+    <div class="brand-logo">FANCL</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <div class="footer-logo-icon">🌸</div>
+        <div class="footer-logo-text">JapanStyle</div>
+      </div>
+      <p class="footer-desc">Более 15 лет поставляем оригинальные японские товары жителям Казахстана. Работаем напрямую с поставщиками из Кобе, Япония.</p>
+      <div class="footer-socials">
+        <div class="social-btn">📘</div>
+        <div class="social-btn">📸</div>
+        <div class="social-btn">▶️</div>
+        <div class="social-btn">💬</div>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>Категории</h4>
+      <ul>
+        <li><a href="#">Детям</a></li>
+        <li><a href="#">Для дома</a></li>
+        <li><a href="#">Для женщин</a></li>
+        <li><a href="#">Для мужчин</a></li>
+        <li><a href="#">Одежда</a></li>
+        <li><a href="#">Японская аптека</a></li>
+        <li><a href="#">Блог</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Информация</h4>
+      <ul>
+        <li><a href="#">О компании</a></li>
+        <li><a href="#">Доставка и оплата</a></li>
+        <li><a href="#">Возврат товара</a></li>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Отзывы</a></li>
+        <li><a href="#">Контакты</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Контакты</h4>
+      <div class="contact-item">
+        <span class="contact-icon">📍</span>
+        <div class="contact-text">
+          <strong>Алматы</strong>
+          ул. Байзакова 280, ТД Almaty
+        </div>
+      </div>
+      <div class="contact-item">
+        <span class="contact-icon">📍</span>
+        <div class="contact-text">
+          <strong>Астана</strong>
+          пр. Туран 55, ТРЦ Mega Silk Way
+        </div>
+      </div>
+      <div class="contact-item">
+        <span class="contact-icon">📞</span>
+        <div class="contact-text">
+          <strong>Телефон</strong>
+          +7 (727) 123-45-67
+        </div>
+      </div>
+      <div class="contact-item">
+        <span class="contact-icon">💬</span>
+        <div class="contact-text">
+          <strong>WhatsApp</strong>
+          +7 (777) 123-45-67
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2025 JapanStyle. Все права защищены.</span>
+    <div class="kaspi-badge">💳 Kaspi Pay</div>
+    <span>Сделано с ❤️ в Казахстане</span>
+  </div>
+</footer>
+
+<!-- CART DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="drawer-header">
+    <h3>🛒 Корзина</h3>
+    <button class="drawer-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="drawer-body" id="cartBody"></div>
+  <div class="drawer-footer" id="cartFooter" style="display:none">
+    <div class="cart-total"><span>Итого:</span><span id="cartTotal">0 ₸</span></div>
+    <button class="checkout-btn" onclick="toast('Оформление заказа — скоро!')">Оформить заказ</button>
+    <button class="kaspi-btn" onclick="toast('Оплата Kaspi — скоро!')">💳 Оплатить через Kaspi</button>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal-overlay" id="productModal" onclick="closeProductModal(event)">
+  <div class="product-modal" id="productModalInner">
+    <div class="modal-img" id="modalImg">🌸</div>
+    <div class="modal-body">
+      <div class="modal-brand" id="modalBrand"></div>
+      <div class="modal-name" id="modalName"></div>
+      <div class="modal-rating">
+        <span class="stars">★★★★★</span>
+        <span style="font-size:13px;color:var(--gray)" id="modalRating"></span>
+      </div>
+      <div class="modal-price" id="modalPrice"></div>
+      <div class="modal-old" id="modalOld"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <button class="modal-add" onclick="addToCartFromModal()">🛒 Добавить в корзину</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── PRODUCTS DATA ─────────────────────────────────────────────────────────
+
+const PRODUCTS = [
+  { id:1,  name:'Крем для лица Shiseido Revital Granas', brand:'Shiseido', price:18900, old:24900, emoji:'🌸', bg:'#fdf2f8', badge:'hit',  rating:4.9, reviews:234, desc:'Интенсивный крем против морщин с коллагеном и ретинолом. Подходит для всех типов кожи. Результат уже через 2 недели применения.', cat:'women' },
+  { id:2,  name:'Шампунь Lion Charming Volume & Style', brand:'Lion',     price:3200,  old:null,  emoji:'💆', bg:'#f0fdf4', badge:'new',  rating:4.8, reviews:89,  desc:'Профессиональный шампунь для придания объёма и блеска. Формула без парабенов, с экстрактом камелии.', cat:'women' },
+  { id:3,  name:'Средство для мытья посуды KAO', brand:'KAO',             price:1490,  old:1990,  emoji:'🍽', bg:'#f0fdf4', badge:'sale', rating:4.7, reviews:412, desc:'Концентрированное средство с ароматом лимона. Эффективно удаляет жир, безопасно для кожи рук. 300 мл.', cat:'home' },
+  { id:4,  name:'Детский гель для купания Lion Baby', brand:'Lion',       price:2890,  old:null,  emoji:'🧴', bg:'#fef3f2', badge:'new',  rating:5.0, reviews:167, desc:'Нежный гель для купания малышей с первых дней жизни. Гипоаллергенный, без красителей и отдушек.', cat:'kids' },
+  { id:5,  name:'Маска для волос Kanebo Trivéen', brand:'Kanebo',         price:5600,  old:7200,  emoji:'💇', bg:'#fdf2f8', badge:'sale', rating:4.8, reviews:98,  desc:'Интенсивная маска для восстановления повреждённых волос. Кератиновый комплекс + масло арганы. 200г.', cat:'women' },
+  { id:6,  name:'Капли для глаз Rohto Vita 40', brand:'Rohto',            price:2100,  old:null,  emoji:'👁', bg:'#eff6ff', badge:'hit',  rating:4.9, reviews:320, desc:'Витаминные капли для глаз с охлаждающим эффектом. Снимают усталость, покраснение. Официальный импорт.', cat:'pharmacy' },
+  { id:7,  name:'Стиральный порошок KAO Attack', brand:'KAO',             price:4200,  old:5100,  emoji:'👕', bg:'#f0fdf4', badge:'sale', rating:4.7, reviews:203, desc:'Концентрированный стиральный порошок для любых тканей. Эффективен при низких температурах. 1 кг.', cat:'home' },
+  { id:8,  name:'Сыворотка Fancl Active Conditioning', brand:'Fancl',     price:12400, old:null,  emoji:'✨', bg:'#fdf2f8', badge:'new',  rating:4.9, reviews:76,  desc:'Активирующая сыворотка для кожи 40+ с комплексом антиоксидантов. Без консервантов, без добавок.', cat:'women' },
+];
+
+const NEW_ARRIVALS = [
+  { id:9,  name:'Гель для умывания KOSE Softymo', brand:'KOSE',            price:3600,  old:null,  emoji:'🧼', bg:'#fdf2f8', badge:'new',  rating:4.8, reviews:45,  desc:'Нежный гель для умывания с гиалуроновой кислотой. Очищает, не пересушивая. 190 мл.', cat:'women' },
+  { id:10, name:'Ополаскиватель для рта Lion Check-Up', brand:'Lion',      price:1890,  old:2200,  emoji:'🦷', bg:'#f0fdf4', badge:'sale', rating:4.6, reviews:134, desc:'Ополаскиватель с фтором для защиты от кариеса. Мятный вкус, без спирта. 900 мл.', cat:'home' },
+  { id:11, name:'Спрей для укладки Shiseido Waso', brand:'Shiseido',      price:8900,  old:null,  emoji:'💨', bg:'#fdf2f8', badge:'new',  rating:4.7, reviews:28,  desc:'Лёгкий спрей-термозащита для волос. Защищает от высоких температур до 230°C.', cat:'women' },
+  { id:12, name:'Крем для мужчин Rohto Mentholatum', brand:'Rohto',       price:4100,  old:5000,  emoji:'🧔', bg:'#eff6ff', badge:'sale', rating:4.8, reviews:91,  desc:'Увлажняющий крем после бритья с ментолом. Снимает раздражение, тонизирует кожу.', cat:'men' },
+];
+
+// ─── STATE ─────────────────────────────────────────────────────────────────
+
+let cart = JSON.parse(localStorage.getItem('jp-cart') || '[]');
+let currentModalProduct = null;
+
+// ─── HERO SLIDER ───────────────────────────────────────────────────────────
+
+let slide = 0;
+const totalSlides = 3;
+
+function goSlide(n) {
+  slide = n;
+  document.getElementById('heroSlides').style.transform = `translateX(-${slide * 100}%)`;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === slide));
+}
+function slideHero(dir) { goSlide((slide + dir + totalSlides) % totalSlides); }
+setInterval(() => slideHero(1), 5000);
+
+// ─── RENDER PRODUCTS ──────────────────────────────────────────────────────
+
+function renderProductCard(p) {
+  const card = document.createElement('div');
+  card.className = 'product-card';
+
+  const badgeMap = { new:'badge-new', hit:'badge-hit', sale:'badge-sale', pre:'badge-pre' };
+  const badgeLabelMap = { new:'Новинка', hit:'Хит', sale:'Скидка', pre:'Предзаказ' };
+
+  card.innerHTML = `
+    <div class="product-img" style="background:${p.bg}">
+      <span>${p.emoji}</span>
+      <div class="product-badges">
+        ${p.badge ? `<span class="badge-tag ${badgeMap[p.badge]}">${badgeLabelMap[p.badge]}</span>` : ''}
+      </div>
+      <button class="wishlist-btn" onclick="event.stopPropagation();toggleWishlist(this)">🤍</button>
+    </div>
+    <div class="product-body">
+      <div class="product-brand">${p.brand}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-rating">
+        <span class="stars">${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5-Math.round(p.rating))}</span>
+        <span class="rating-num">${p.rating} (${p.reviews})</span>
+      </div>
+      <div class="product-price">
+        <span class="price-main">${p.price.toLocaleString('ru-RU')} ₸</span>
+        ${p.old ? `<span class="price-old">${p.old.toLocaleString('ru-RU')} ₸</span>` : ''}
+      </div>
+    </div>
+    <button class="add-to-cart" onclick="event.stopPropagation();addToCart(${p.id})">🛒 В корзину</button>
+  `;
+  card.onclick = () => openModal(p);
+  return card;
+}
+
+function renderGrids() {
+  const bs = document.getElementById('bestsellersGrid');
+  const na = document.getElementById('newArrivalsGrid');
+  PRODUCTS.forEach(p => bs.appendChild(renderProductCard(p)));
+  NEW_ARRIVALS.forEach(p => na.appendChild(renderProductCard(p)));
+}
+
+// ─── WISHLIST ─────────────────────────────────────────────────────────────
+
+function toggleWishlist(btn) {
+  btn.classList.toggle('active');
+  btn.textContent = btn.classList.contains('active') ? '❤️' : '🤍';
+  const count = document.querySelectorAll('.wishlist-btn.active').length;
+  const badge = document.getElementById('wishlistBadge');
+  badge.style.display = count ? '' : 'none';
+  badge.textContent = count;
+}
+
+// ─── CART ──────────────────────────────────────────────────────────────────
+
+const ALL_PRODUCTS = [...PRODUCTS, ...NEW_ARRIVALS];
+
+function addToCart(id) {
+  const p = ALL_PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  const existing = cart.find(x => x.id === id);
+  if (existing) existing.qty++;
+  else cart.push({ id, qty: 1 });
+  saveCart();
+  updateCartBadge();
+  toast(`«${p.name.slice(0,28)}...» добавлен в корзину`);
+}
+
+function saveCart() { localStorage.setItem('jp-cart', JSON.stringify(cart)); }
+
+function updateCartBadge() {
+  const total = cart.reduce((s, x) => s + x.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  badge.style.display = total ? '' : 'none';
+  badge.textContent = total;
+}
+
+function openCart() {
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('cartDrawer').classList.add('open');
+  renderCart();
+}
+function closeCart() {
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('cartDrawer').classList.remove('open');
+}
+
+function renderCart() {
+  const body = document.getElementById('cartBody');
+  const footer = document.getElementById('cartFooter');
+  body.innerHTML = '';
+
+  if (cart.length === 0) {
+    body.innerHTML = `<div class="cart-empty"><div class="empty-icon">🛒</div><p>Корзина пуста</p></div>`;
+    footer.style.display = 'none';
+    return;
+  }
+
+  let total = 0;
+  cart.forEach(item => {
+    const p = ALL_PRODUCTS.find(x => x.id === item.id);
+    if (!p) return;
+    total += p.price * item.qty;
+    const el = document.createElement('div');
+    el.className = 'cart-item';
+    el.innerHTML = `
+      <div class="cart-item-img" style="background:${p.bg}">${p.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${p.name}</div>
+        <div class="cart-item-price">${(p.price * item.qty).toLocaleString('ru-RU')} ₸</div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="changeQty(${p.id},-1)">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${p.id},1)">+</button>
+        </div>
+      </div>
+      <button class="cart-remove" onclick="removeFromCart(${p.id})">🗑</button>
+    `;
+    body.appendChild(el);
+  });
+
+  document.getElementById('cartTotal').textContent = total.toLocaleString('ru-RU') + ' ₸';
+  footer.style.display = '';
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(x => x.id === id);
+  if (!item) return;
+  item.qty = Math.max(1, item.qty + delta);
+  saveCart(); updateCartBadge(); renderCart();
+}
+
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  saveCart(); updateCartBadge(); renderCart();
+}
+
+// ─── PRODUCT MODAL ─────────────────────────────────────────────────────────
+
+function openModal(p) {
+  currentModalProduct = p;
+  document.getElementById('modalImg').textContent = p.emoji;
+  document.getElementById('modalImg').style.background = p.bg;
+  document.getElementById('modalBrand').textContent = p.brand;
+  document.getElementById('modalName').textContent = p.name;
+  document.getElementById('modalRating').textContent = `${p.rating} (${p.reviews} отзывов)`;
+  document.getElementById('modalPrice').textContent = p.price.toLocaleString('ru-RU') + ' ₸';
+  document.getElementById('modalOld').textContent = p.old ? p.old.toLocaleString('ru-RU') + ' ₸' : '';
+  document.getElementById('modalOld').style.display = p.old ? '' : 'none';
+  document.getElementById('modalDesc').textContent = p.desc;
+  document.getElementById('productModal').classList.add('open');
+}
+
+function closeProductModal(e) {
+  if (e.target === document.getElementById('productModal')) {
+    document.getElementById('productModal').classList.remove('open');
+  }
+}
+
+function addToCartFromModal() {
+  if (currentModalProduct) {
+    addToCart(currentModalProduct.id);
+    document.getElementById('productModal').classList.remove('open');
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('productModal').classList.remove('open');
+    closeCart();
+  }
+});
+
+// ─── SEARCH ────────────────────────────────────────────────────────────────
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) toast(`Поиск: "${q}" — скоро!`);
+}
+
+// ─── TOAST ─────────────────────────────────────────────────────────────────
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────
+
+renderGrids();
+updateCartBadge();
+</script>
+</body>
+</html>
