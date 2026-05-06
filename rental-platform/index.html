@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpaceBook — Book Your Perfect Space</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f1f5f9;
+      --surface:  #ffffff;
+      --border:   #e2e8f0;
+      --border2:  #cbd5e1;
+      --primary:  #2563eb;
+      --primary-d:#1d4ed8;
+      --primary-l:#eff6ff;
+      --text:     #0f172a;
+      --muted:    #64748b;
+      --muted2:   #94a3b8;
+      --success:  #10b981;
+      --warning:  #f59e0b;
+      --danger:   #ef4444;
+      --radius:   10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    #navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      cursor: pointer;
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links { display: flex; gap: 8px; align-items: center; }
+    .nav-badge {
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 6px;
+      margin-left: -6px;
+      margin-top: -12px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-d); transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border2); color: var(--text); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-l); }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-danger { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-success { background: #d1fae5; color: var(--success); border: 1px solid #a7f3d0; }
+    .btn-lg { padding: 12px 28px; font-size: 15px; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-full { width: 100%; justify-content: center; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+
+    /* ── Views ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Hero ── */
+    #hero {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+      color: #fff;
+      padding: 64px 24px;
+      text-align: center;
+    }
+    #hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+    #hero p { font-size: 18px; opacity: 0.88; margin-bottom: 32px; }
+    .hero-search {
+      display: flex;
+      max-width: 540px;
+      margin: 0 auto;
+      gap: 0;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .hero-search input {
+      flex: 1;
+      border: none;
+      padding: 14px 18px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+    }
+    .hero-search button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 14px 22px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s;
+    }
+    .hero-search button:hover { background: var(--primary-d); }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+    .stats-bar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+    }
+    .stat-item { text-align: center; }
+    .stat-item .sv { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .stat-item .sl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Main content layout ── */
+    .content-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-group { display: flex; gap: 6px; align-items: center; }
+    .filter-group label { font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .filter-select {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 7px;
+      padding: 7px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--primary); }
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border2);
+      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-chip.active { border-color: var(--primary); color: var(--primary); background: var(--primary-l); }
+    .filter-divider { width: 1px; height: 24px; background: var(--border); }
+    .results-count { font-size: 13px; color: var(--muted); margin-left: auto; }
+
+    /* ── Space cards grid ── */
+    .spaces-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .space-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .space-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); border-color: #cbd5e1; }
+
+    .space-card-img {
+      height: 180px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 14px;
+    }
+    .space-type-badge {
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .space-capacity-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+
+    .space-card-body { padding: 16px; }
+    .space-card-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .space-card-loc { font-size: 12px; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
+    .space-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 10px;
+    }
+    .space-price { font-size: 18px; font-weight: 800; color: var(--primary); }
+    .space-price span { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .space-rating { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; }
+    .space-rating .star { color: #f59e0b; }
+
+    .amenity-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+    .amenity-chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* ── Detail view ── */
+    .detail-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-size: 14px;
+      width: fit-content;
+    }
+    .detail-back:hover { text-decoration: underline; }
+
+    .detail-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 28px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .detail-layout { grid-template-columns: 1fr; } }
+
+    .detail-hero {
+      height: 320px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-end;
+      padding: 24px;
+    }
+    .detail-hero-content { }
+    .detail-hero h1 { font-size: 30px; font-weight: 800; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .detail-hero-meta { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+    .detail-badge {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+    .detail-desc { color: var(--muted); line-height: 1.7; margin-bottom: 24px; font-size: 14px; }
+
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .amenity-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .amenity-item .icon { font-size: 18px; }
+
+    /* ── Booking Widget ── */
+    .booking-widget {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      position: sticky;
+      top: 80px;
+    }
+    .widget-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .widget-price .amount { font-size: 28px; font-weight: 800; color: var(--primary); }
+    .widget-price .per { font-size: 14px; color: var(--muted); }
+
+    /* ── Calendar ── */
+    .calendar { margin-bottom: 16px; }
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .cal-header .month-label { font-size: 15px; font-weight: 700; }
+    .cal-nav-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.15s;
+      color: var(--text);
+    }
+    .cal-nav-btn:hover { background: var(--primary-l); border-color: var(--primary); color: var(--primary); }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 6px;
+    }
+    .cal-weekday { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); padding: 4px 0; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.12s;
+      border: 1.5px solid transparent;
+    }
+    .cal-day:empty, .cal-day.empty { cursor: default; }
+    .cal-day.past { color: var(--muted2); cursor: not-allowed; }
+    .cal-day.today { border-color: var(--primary); color: var(--primary); font-weight: 700; }
+    .cal-day.available:hover { background: var(--primary-l); color: var(--primary); }
+    .cal-day.selected { background: var(--primary); color: #fff !important; font-weight: 700; border-color: var(--primary); }
+    .cal-day.has-bookings::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--warning);
+    }
+    .cal-day.fully-booked { background: #fee2e2; color: #ef4444 !important; cursor: not-allowed; }
+    .cal-day.fully-booked:hover { background: #fee2e2; }
+
+    /* ── Time Slots ── */
+    .time-section { margin-bottom: 16px; }
+    .time-section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 8px; }
+    .time-slots-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+    }
+    .time-slot-btn {
+      padding: 7px 4px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.12s;
+      color: var(--text);
+    }
+    .time-slot-btn:hover:not(.booked):not(.past) { border-color: var(--primary); color: var(--primary); background: var(--primary-l); }
+    .time-slot-btn.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .time-slot-btn.booked { background: #fee2e2; color: #ef4444; border-color: #fecaca; cursor: not-allowed; font-size: 10px; }
+    .time-slot-btn.past { background: var(--bg); color: var(--muted2); cursor: not-allowed; border-color: var(--border); }
+
+    .duration-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .dur-btn {
+      padding: 6px 12px;
+      border-radius: 7px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s;
+      color: var(--text);
+    }
+    .dur-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .dur-btn.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .dur-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .booking-summary {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .booking-summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+    .booking-summary-row.total {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--muted);
+    }
+    .modal-close:hover { background: #fee2e2; color: var(--danger); }
+    .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .modal .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      border: 1.5px solid var(--border2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .booking-recap {
+      background: var(--primary-l);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .recap-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .recap-row.total { font-weight: 700; font-size: 15px; color: var(--primary); margin-top: 6px; padding-top: 6px; border-top: 1px solid #bfdbfe; margin-bottom: 0; }
+    .recap-row span:first-child { color: var(--muted); }
+
+    /* ── Confirmation ── */
+    .confirm-icon { font-size: 56px; text-align: center; margin-bottom: 16px; }
+    .confirm-ref {
+      background: var(--primary-l);
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      margin: 16px 0;
+    }
+    .confirm-ref .ref-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .confirm-ref .ref-code { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+
+    /* ── My Bookings ── */
+    .bookings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .bookings-header h2 { font-size: 22px; font-weight: 700; }
+
+    .booking-tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+    .booking-tab {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .booking-tab.active { background: var(--primary); color: #fff; }
+
+    .booking-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .booking-card-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .booking-card-body { flex: 1; }
+    .booking-card-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .booking-card-meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .booking-card-meta span { display: flex; align-items: center; gap: 4px; }
+    .booking-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .booking-status {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-confirmed { background: #d1fae5; color: var(--success); }
+    .status-cancelled { background: #fee2e2; color: var(--danger); }
+    .status-past { background: var(--bg); color: var(--muted); }
+
+    /* ── Admin ── */
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .admin-stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .admin-stat-card .val { font-size: 30px; font-weight: 800; color: var(--primary); }
+    .admin-stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .admin-table {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .admin-table h3 { font-size: 15px; font-weight: 700; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg); padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+    td { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    tr:hover td { background: #f8fafc; }
+
+    .util-bar { background: var(--bg); border-radius: 6px; height: 8px; overflow: hidden; min-width: 80px; }
+    .util-fill { height: 100%; border-radius: 6px; background: var(--primary); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .emo { font-size: 48px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    .tag { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px 8px; font-size: 11px; color: var(--muted); }
+
+    .notice { background: #fffbeb; border: 1px solid #fde68a; border-radius: 9px; padding: 12px 16px; font-size: 13px; color: #92400e; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="showView('home')">Space<span>Book</span></div>
+    <div class="nav-links">
+      <button class="btn btn-ghost" onclick="showView('home')">Browse Spaces</button>
+      <button class="btn btn-outline" onclick="showView('bookings')" style="position:relative">
+        My Bookings
+        <span class="nav-badge" id="bookings-badge" style="display:none">0</span>
+      </button>
+      <button class="btn btn-primary" onclick="showView('admin')">⚙ Admin</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════
+     HOME VIEW
+══════════════════════════════════════ -->
+<div id="view-home" class="view active">
+  <div id="hero">
+    <h1>Find Your Perfect Space</h1>
+    <p>Book meeting rooms, event spaces & private offices — instantly.</p>
+    <div class="hero-search">
+      <input id="hero-search" type="text" placeholder="Search spaces by name or amenity…">
+      <button onclick="applySearch()">Search</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stats-bar-inner">
+      <div class="stat-item"><div class="sv">9</div><div class="sl">Spaces Available</div></div>
+      <div class="stat-item"><div class="sv" id="stat-today">0</div><div class="sl">Booked Today</div></div>
+      <div class="stat-item"><div class="sv">4.8 ★</div><div class="sl">Average Rating</div></div>
+      <div class="stat-item"><div class="sv">1,240+</div><div class="sl">Happy Guests</div></div>
+    </div>
+  </div>
+
+  <div class="content-wrap">
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>Type:</label>
+        <button class="filter-chip active" data-type="all">All</button>
+        <button class="filter-chip" data-type="meeting">Meeting Room</button>
+        <button class="filter-chip" data-type="conference">Conference</button>
+        <button class="filter-chip" data-type="event">Event Space</button>
+        <button class="filter-chip" data-type="office">Private Office</button>
+        <button class="filter-chip" data-type="coworking">Co-working</button>
+      </div>
+      <div class="filter-divider"></div>
+      <div class="filter-group">
+        <label>Capacity:</label>
+        <select class="filter-select" id="cap-filter">
+          <option value="0">Any size</option>
+          <option value="4">1–4 people</option>
+          <option value="10">5–10 people</option>
+          <option value="20">11–20 people</option>
+          <option value="99">20+ people</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Price:</label>
+        <select class="filter-select" id="price-filter">
+          <option value="0">Any price</option>
+          <option value="50">Under $50/hr</option>
+          <option value="100">$50–$100/hr</option>
+          <option value="999">$100+/hr</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Sort:</label>
+        <select class="filter-select" id="sort-filter">
+          <option value="rating">Top Rated</option>
+          <option value="price-asc">Price: Low–High</option>
+          <option value="price-desc">Price: High–Low</option>
+          <option value="capacity">Capacity</option>
+        </select>
+      </div>
+      <span class="results-count" id="results-count"></span>
+    </div>
+    <div id="spaces-grid" class="spaces-grid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     DETAIL VIEW
+══════════════════════════════════════ -->
+<div id="view-detail" class="view">
+  <div class="content-wrap">
+    <div class="detail-back" onclick="showView('home')">← Back to spaces</div>
+    <div class="detail-layout">
+      <!-- Left: info -->
+      <div id="detail-info"></div>
+      <!-- Right: booking widget -->
+      <div>
+        <div class="booking-widget" id="booking-widget"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MY BOOKINGS VIEW
+══════════════════════════════════════ -->
+<div id="view-bookings" class="view">
+  <div class="content-wrap">
+    <div class="bookings-header">
+      <h2>My Bookings</h2>
+      <button class="btn btn-primary" onclick="showView('home')">+ Book a Space</button>
+    </div>
+    <div class="booking-tabs">
+      <button class="booking-tab active" data-btab="upcoming">Upcoming</button>
+      <button class="booking-tab" data-btab="past">Past</button>
+      <button class="booking-tab" data-btab="cancelled">Cancelled</button>
+    </div>
+    <div id="bookings-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ADMIN VIEW
+══════════════════════════════════════ -->
+<div id="view-admin" class="view">
+  <div class="content-wrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div>
+        <h2 style="font-size:22px;font-weight:700">Admin Dashboard</h2>
+        <div style="color:var(--muted);font-size:13px">Overview of all spaces and bookings</div>
+      </div>
+      <button class="btn btn-outline" onclick="showView('home')">← Back to Site</button>
+    </div>
+    <div class="admin-stats-grid" id="admin-stats"></div>
+    <div class="admin-table" id="admin-bookings-table"></div>
+    <div class="admin-table" id="admin-spaces-table"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOOKING FORM MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-form">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-form')">✕</button>
+    <h2>Complete Your Booking</h2>
+    <div class="modal-sub">Fill in your details to confirm the reservation.</div>
+
+    <div class="booking-recap" id="form-recap"></div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name *</label>
+        <input type="text" id="f-first" placeholder="Jane">
+      </div>
+      <div class="form-group">
+        <label>Last Name *</label>
+        <input type="text" id="f-last" placeholder="Smith">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Email Address *</label>
+      <input type="email" id="f-email" placeholder="jane@company.com">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000">
+      </div>
+      <div class="form-group">
+        <label>Attendees *</label>
+        <input type="number" id="f-attendees" placeholder="e.g. 8" min="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Organization</label>
+      <input type="text" id="f-org" placeholder="Company name (optional)">
+    </div>
+    <div class="form-group">
+      <label>Purpose / Meeting Type *</label>
+      <select id="f-purpose">
+        <option value="">Select purpose…</option>
+        <option>Team Meeting</option>
+        <option>Client Presentation</option>
+        <option>Training / Workshop</option>
+        <option>Board Meeting</option>
+        <option>Interview</option>
+        <option>Networking Event</option>
+        <option>Private Party</option>
+        <option>Conference</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Special Requests</label>
+      <textarea id="f-notes" placeholder="Any catering, setup, or AV requirements…"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full btn-lg" id="confirm-booking-btn" onclick="confirmBooking()">
+      Confirm Booking
+    </button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">Free cancellation up to 24h before your booking</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CONFIRMATION MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="text-align:center">
+    <div class="confirm-icon">🎉</div>
+    <h2>Booking Confirmed!</h2>
+    <p style="color:var(--muted);font-size:13px;margin-top:4px">Your space has been successfully reserved.</p>
+    <div class="confirm-ref">
+      <div class="ref-label">Booking Reference</div>
+      <div class="ref-code" id="confirm-ref-code"></div>
+    </div>
+    <div id="confirm-summary" style="text-align:left;margin:16px 0"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-outline" onclick="closeModal('modal-confirm');showView('bookings')">View My Bookings</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-confirm');showView('home')">Book Another</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+
+const SPACES = [
+  {
+    id: 1, name: 'The Boardroom', type: 'meeting',
+    capacity: 12, pricePerHour: 45,
+    rating: 4.9, reviews: 87,
+    floor: 'Floor 3, North Wing',
+    description: 'Our flagship boardroom features floor-to-ceiling windows overlooking the city skyline. Equipped with the latest presentation technology and ergonomic seating for up to 12 guests. Perfect for executive meetings, client presentations, and strategic planning sessions.',
+    amenities: ['wifi', 'whiteboard', 'projector', 'video', 'coffee', 'ac', 'natural_light', 'phone'],
+    gradient: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%)',
+    accentColor: '#2563eb',
+    minHours: 1, maxHours: 8,
+  },
+  {
+    id: 2, name: 'Innovation Lab', type: 'conference',
+    capacity: 24, pricePerHour: 75,
+    rating: 4.8, reviews: 63,
+    floor: 'Floor 2, East Wing',
+    description: 'A dynamic conference space designed for innovation workshops and large team meetings. Features modular furniture that can be rearranged for any setup, plus a full HD smart display system with wireless screen sharing.',
+    amenities: ['wifi', 'whiteboard', 'tv', 'video', 'coffee', 'ac', 'catering', 'parking'],
+    gradient: 'linear-gradient(135deg, #581c87 0%, #7c3aed 60%, #a78bfa 100%)',
+    accentColor: '#7c3aed',
+    minHours: 2, maxHours: 8,
+  },
+  {
+    id: 3, name: 'The Grand Hall', type: 'event',
+    capacity: 120, pricePerHour: 250,
+    rating: 4.7, reviews: 41,
+    floor: 'Ground Floor, Main Entrance',
+    description: 'Our largest and most prestigious venue, ideal for conferences, galas, product launches, and large corporate events. The Grand Hall offers a stunning high-ceiling space with professional lighting rig, stage, and full AV capabilities.',
+    amenities: ['wifi', 'sound', 'projector', 'catering', 'ac', 'parking', 'stage', 'lighting'],
+    gradient: 'linear-gradient(135deg, #78350f 0%, #d97706 60%, #fbbf24 100%)',
+    accentColor: '#d97706',
+    minHours: 2, maxHours: 12,
+  },
+  {
+    id: 4, name: 'Focus Pod A', type: 'office',
+    capacity: 4, pricePerHour: 20,
+    rating: 4.9, reviews: 118,
+    floor: 'Floor 1, Quiet Zone',
+    description: 'A compact, soundproofed private office perfect for focused deep work, confidential calls, or small team sprints. Includes a height-adjustable standing desk and premium ergonomic chairs.',
+    amenities: ['wifi', 'standing_desk', 'phone', 'ac', 'whiteboard'],
+    gradient: 'linear-gradient(135deg, #064e3b 0%, #059669 60%, #34d399 100%)',
+    accentColor: '#059669',
+    minHours: 1, maxHours: 8,
+  },
+  {
+    id: 5, name: 'Focus Pod B', type: 'office',
+    capacity: 4, pricePerHour: 20,
+    rating: 4.8, reviews: 95,
+    floor: 'Floor 1, Quiet Zone',
+    description: 'Identical twin to Focus Pod A — equally comfortable and fully equipped. Book both pods simultaneously for a team of up to 8 people who need two separate spaces.',
+    amenities: ['wifi', 'standing_desk', 'phone', 'ac', 'whiteboard'],
+    gradient: 'linear-gradient(135deg, #052e16 0%, #16a34a 60%, #4ade80 100%)',
+    accentColor: '#16a34a',
+    minHours: 1, maxHours: 8,
+  },
+  {
+    id: 6, name: 'The Rooftop Terrace', type: 'event',
+    capacity: 80, pricePerHour: 180,
+    rating: 4.9, reviews: 54,
+    floor: 'Rooftop, Penthouse Level',
+    description: 'An unforgettable outdoor rooftop venue with 360° panoramic city views. Features retractable awning, outdoor furniture, a bar setup area, and ambient lighting. Ideal for evening networking events, cocktail parties, and summer gatherings.',
+    amenities: ['wifi', 'sound', 'catering', 'bar', 'lighting', 'outdoor'],
+    gradient: 'linear-gradient(135deg, #831843 0%, #db2777 60%, #f472b6 100%)',
+    accentColor: '#db2777',
+    minHours: 2, maxHours: 8,
+  },
+  {
+    id: 7, name: 'Creative Studio', type: 'meeting',
+    capacity: 8, pricePerHour: 35,
+    rating: 4.7, reviews: 76,
+    floor: 'Floor 2, Creative Hub',
+    description: 'An inspiring space for creative brainstorming, design sprints, and team ideation. Walls are fully writable surfaces, and the room comes stocked with markers, Post-it notes, and creative supplies.',
+    amenities: ['wifi', 'whiteboard', 'tv', 'coffee', 'ac', 'natural_light'],
+    gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0284c7 60%, #38bdf8 100%)',
+    accentColor: '#0284c7',
+    minHours: 1, maxHours: 8,
+  },
+  {
+    id: 8, name: 'Executive Suite', type: 'conference',
+    capacity: 16, pricePerHour: 95,
+    rating: 4.8, reviews: 49,
+    floor: 'Floor 5, Premium Level',
+    description: 'Our most luxurious conference room, finished with premium materials and executive furniture. Equipped with a 98" 4K display, professional video conferencing system, and dedicated concierge service available on request.',
+    amenities: ['wifi', 'tv', 'video', 'coffee', 'ac', 'catering', 'parking', 'concierge'],
+    gradient: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #475569 100%)',
+    accentColor: '#475569',
+    minHours: 1, maxHours: 8,
+  },
+  {
+    id: 9, name: 'Co-work Corner', type: 'coworking',
+    capacity: 1, pricePerHour: 12,
+    rating: 4.6, reviews: 203,
+    floor: 'Ground Floor, Open Area',
+    description: 'A flexible hot-desk in our vibrant co-working area. Enjoy a productive atmosphere alongside other professionals, with access to all shared amenities including high-speed WiFi, printing, and the community kitchen.',
+    amenities: ['wifi', 'coffee', 'printing', 'kitchen', 'ac', 'natural_light'],
+    gradient: 'linear-gradient(135deg, #7f1d1d 0%, #ef4444 60%, #fca5a5 100%)',
+    accentColor: '#ef4444',
+    minHours: 1, maxHours: 8,
+  },
+];
+
+const AMENITY_INFO = {
+  wifi:         { icon: '📶', label: 'High-speed WiFi' },
+  whiteboard:   { icon: '🖊️',  label: 'Whiteboard' },
+  projector:    { icon: '📽️', label: 'Projector' },
+  tv:           { icon: '📺', label: 'Smart TV / 4K Display' },
+  video:        { icon: '🎥', label: 'Video Conferencing' },
+  coffee:       { icon: '☕', label: 'Coffee & Tea' },
+  catering:     { icon: '🍽️', label: 'Catering Available' },
+  sound:        { icon: '🔊', label: 'Sound System' },
+  ac:           { icon: '❄️',  label: 'Air Conditioning' },
+  natural_light:{ icon: '🌤️', label: 'Natural Light' },
+  parking:      { icon: '🚗', label: 'Parking Included' },
+  phone:        { icon: '📞', label: 'Conference Phone' },
+  standing_desk:{ icon: '🖥️', label: 'Standing Desks' },
+  bar:          { icon: '🥂', label: 'Bar Setup Area' },
+  stage:        { icon: '🎭', label: 'Stage & Podium' },
+  lighting:     { icon: '💡', label: 'Professional Lighting' },
+  outdoor:      { icon: '🌿', label: 'Outdoor Space' },
+  printing:     { icon: '🖨️', label: 'Printing Services' },
+  kitchen:      { icon: '🫖', label: 'Kitchen Access' },
+  concierge:    { icon: '🤵', label: 'Concierge Service' },
+};
+
+const TYPE_LABELS = {
+  meeting: 'Meeting Room', conference: 'Conference Room',
+  event: 'Event Space', office: 'Private Office', coworking: 'Co-working',
+};
+
+// Operating hours: 8 AM – 9 PM (last slot start = 8 PM, ends 9 PM)
+const HOURS = Array.from({ length: 13 }, (_, i) => {
+  const h = 8 + i;
+  return { hour: h, label: h < 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM` };
+});
+
+// ════════════════════════════════════════════════════════════
+// STORAGE
+// ════════════════════════════════════════════════════════════
+
+function getBookings()          { return JSON.parse(localStorage.getItem('sb_bookings') || '[]'); }
+function saveBookings(b)        { localStorage.setItem('sb_bookings', JSON.stringify(b)); }
+function addBooking(b)          { const arr = getBookings(); arr.push(b); saveBookings(arr); }
+function cancelBooking(id) {
+  const arr = getBookings().map(b => b.id === id ? { ...b, status: 'cancelled' } : b);
+  saveBookings(arr);
+}
+
+function genId() { return 'SB-' + Date.now().toString(36).toUpperCase().slice(-6); }
+
+function getBookedSlots(spaceId, dateStr) {
+  const booked = new Set();
+  getBookings()
+    .filter(b => b.spaceId === spaceId && b.date === dateStr && b.status !== 'cancelled')
+    .forEach(b => {
+      for (let h = b.startHour; h < b.endHour; h++) booked.add(h);
+    });
+  return booked;
+}
+
+function isDayFullyBooked(spaceId, dateStr) {
+  const booked = getBookedSlots(spaceId, dateStr);
+  return HOURS.every(({ hour }) => booked.has(hour));
+}
+
+function isDayPartiallyBooked(spaceId, dateStr) {
+  const booked = getBookedSlots(spaceId, dateStr);
+  return HOURS.some(({ hour }) => booked.has(hour));
+}
+
+// Seed some demo bookings on first load
+function seedDemoBookings() {
+  if (localStorage.getItem('sb_seeded')) return;
+  const today = new Date();
+  const fmt = d => d.toISOString().split('T')[0];
+  const tm = d => { d.setDate(d.getDate()); return fmt(d); };
+  const demo = [
+    { id: genId(), spaceId: 1, spaceName: 'The Boardroom',   date: fmt(new Date(today.getFullYear(), today.getMonth(), today.getDate())),     startHour: 9,  endHour: 11, duration: 2, totalCost: 90,  status: 'confirmed', guestName: 'Alice Johnson', email: 'alice@acme.com', purpose: 'Board Meeting', attendees: 8, createdAt: new Date().toISOString() },
+    { id: genId(), spaceId: 2, spaceName: 'Innovation Lab',   date: fmt(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2)), startHour: 10, endHour: 14, duration: 4, totalCost: 300, status: 'confirmed', guestName: 'Bob Williams', email: 'bob@startup.io', purpose: 'Team Meeting', attendees: 15, createdAt: new Date().toISOString() },
+    { id: genId(), spaceId: 7, spaceName: 'Creative Studio',  date: fmt(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)), startHour: 14, endHour: 17, duration: 3, totalCost: 105, status: 'confirmed', guestName: 'Demo User',  email: 'demo@spacebook.com', purpose: 'Training / Workshop', attendees: 6, createdAt: new Date().toISOString() },
+  ];
+  saveBookings(demo);
+  localStorage.setItem('sb_seeded', '1');
+}
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+
+const state = {
+  currentView: 'home',
+  detail: { spaceId: null, calYear: null, calMonth: null, selectedDate: null, selectedStart: null, selectedDuration: null },
+  filters: { type: 'all', cap: 0, price: 0, sort: 'rating', search: '' },
+  booking: { tab: 'upcoming' },
+};
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  state.currentView = name;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (name === 'bookings') renderBookings();
+  if (name === 'admin')    renderAdmin();
+  if (name === 'home')     renderSpaces();
+  updateBadge();
+}
+
+function openDetail(spaceId) {
+  const now = new Date();
+  state.detail = { spaceId, calYear: now.getFullYear(), calMonth: now.getMonth(), selectedDate: null, selectedStart: null, selectedDuration: null };
+  showView('detail');
+  renderDetail();
+}
+
+// ════════════════════════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════════════════════════
+
+function renderSpaces() {
+  let spaces = [...SPACES];
+  const { type, cap, price, sort, search } = state.filters;
+
+  if (type !== 'all') spaces = spaces.filter(s => s.type === type);
+  if (search) {
+    const q = search.toLowerCase();
+    spaces = spaces.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.description.toLowerCase().includes(q) ||
+      s.amenities.some(a => AMENITY_INFO[a]?.label.toLowerCase().includes(q))
+    );
+  }
+  if (cap > 0) {
+    const ranges = { 4: [1,4], 10: [5,10], 20: [11,20], 99: [21,9999] };
+    const [lo, hi] = ranges[cap] ?? [0, 9999];
+    spaces = spaces.filter(s => s.capacity >= lo && s.capacity <= hi);
+  }
+  if (price > 0) {
+    const ranges = { 50: [0,49], 100: [50,100], 999: [101,9999] };
+    const [lo, hi] = ranges[price] ?? [0, 9999];
+    spaces = spaces.filter(s => s.pricePerHour >= lo && s.pricePerHour <= hi);
+  }
+  const sorters = {
+    'rating':     (a, b) => b.rating - a.rating,
+    'price-asc':  (a, b) => a.pricePerHour - b.pricePerHour,
+    'price-desc': (a, b) => b.pricePerHour - a.pricePerHour,
+    'capacity':   (a, b) => b.capacity - a.capacity,
+  };
+  spaces.sort(sorters[sort] || sorters.rating);
+
+  document.getElementById('results-count').textContent = `${spaces.length} space${spaces.length !== 1 ? 's' : ''} found`;
+
+  if (spaces.length === 0) {
+    document.getElementById('spaces-grid').innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="emo">🔍</div>
+        <h3>No spaces found</h3>
+        <p>Try adjusting your filters or search term.</p>
+        <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('spaces-grid').innerHTML = spaces.map(s => {
+    const topAmenities = s.amenities.slice(0, 4).map(a =>
+      `<span class="amenity-chip">${AMENITY_INFO[a]?.icon} ${AMENITY_INFO[a]?.label ?? a}</span>`
+    ).join('');
+    return `
+    <div class="space-card" onclick="openDetail(${s.id})">
+      <div class="space-card-img" style="background:${s.gradient}">
+        <span class="space-type-badge" style="color:${s.accentColor}">${TYPE_LABELS[s.type]}</span>
+        <span class="space-capacity-badge">👥 Up to ${s.capacity}</span>
+      </div>
+      <div class="space-card-body">
+        <div class="space-card-title">${s.name}</div>
+        <div class="space-card-loc">📍 ${s.floor}</div>
+        <div class="amenity-chips">${topAmenities}</div>
+        <div class="space-card-meta">
+          <div class="space-price">$${s.pricePerHour}<span>/hour</span></div>
+          <div class="space-rating"><span class="star">★</span>${s.rating} <span style="color:var(--muted);font-weight:400">(${s.reviews})</span></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Update today's stat
+  const today = new Date().toISOString().split('T')[0];
+  const todayCount = getBookings().filter(b => b.date === today && b.status !== 'cancelled').length;
+  document.getElementById('stat-today').textContent = todayCount;
+}
+
+function applySearch() {
+  state.filters.search = document.getElementById('hero-search').value.trim();
+  renderSpaces();
+  showView('home');
+}
+
+function clearFilters() {
+  state.filters = { type: 'all', cap: 0, price: 0, sort: 'rating', search: '' };
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.type === 'all'));
+  document.getElementById('cap-filter').value   = '0';
+  document.getElementById('price-filter').value = '0';
+  document.getElementById('sort-filter').value  = 'rating';
+  document.getElementById('hero-search').value  = '';
+  renderSpaces();
+}
+
+// Filter chips
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    state.filters.type = chip.dataset.type;
+    renderSpaces();
+  });
+});
+
+document.getElementById('cap-filter').addEventListener('change',   e => { state.filters.cap   = +e.target.value; renderSpaces(); });
+document.getElementById('price-filter').addEventListener('change', e => { state.filters.price  = +e.target.value; renderSpaces(); });
+document.getElementById('sort-filter').addEventListener('change',  e => { state.filters.sort   = e.target.value;  renderSpaces(); });
+document.getElementById('hero-search').addEventListener('keydown', e => { if (e.key === 'Enter') applySearch(); });
+
+// ════════════════════════════════════════════════════════════
+// DETAIL + BOOKING WIDGET
+// ════════════════════════════════════════════════════════════
+
+function renderDetail() {
+  const s = SPACES.find(x => x.id === state.detail.spaceId);
+  if (!s) return;
+
+  document.getElementById('detail-info').innerHTML = `
+    <div class="detail-hero" style="background:${s.gradient}">
+      <div class="detail-hero-content">
+        <h1>${s.name}</h1>
+        <div class="detail-hero-meta">
+          <span class="detail-badge">📍 ${s.floor}</span>
+          <span class="detail-badge">👥 Up to ${s.capacity} people</span>
+          <span class="detail-badge">★ ${s.rating} (${s.reviews} reviews)</span>
+          <span class="detail-badge">${TYPE_LABELS[s.type]}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">About This Space</div>
+    <div class="detail-desc">${s.description}</div>
+
+    <div class="section-title">Amenities</div>
+    <div class="amenities-grid">
+      ${s.amenities.map(a => `
+        <div class="amenity-item">
+          <span class="icon">${AMENITY_INFO[a]?.icon ?? '•'}</span>
+          ${AMENITY_INFO[a]?.label ?? a}
+        </div>`).join('')}
+    </div>
+
+    <div class="section-title">Pricing</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:24px">
+      <div style="display:flex;gap:24px;flex-wrap:wrap">
+        <div><div style="font-size:22px;font-weight:800;color:var(--primary)">$${s.pricePerHour}<span style="font-size:14px;font-weight:500;color:var(--muted)">/hour</span></div><div style="font-size:12px;color:var(--muted)">Hourly rate</div></div>
+        <div><div style="font-size:22px;font-weight:800;color:var(--text)">$${(s.pricePerHour * 4).toFixed(0)}<span style="font-size:14px;font-weight:500;color:var(--muted)">/4 hrs</span></div><div style="font-size:12px;color:var(--muted)">Half day estimate</div></div>
+        <div><div style="font-size:22px;font-weight:800;color:var(--text)">$${(s.pricePerHour * 8).toFixed(0)}<span style="font-size:14px;font-weight:500;color:var(--muted)">/8 hrs</span></div><div style="font-size:12px;color:var(--muted)">Full day estimate</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted)">Minimum booking: ${s.minHours} hour${s.minHours > 1 ? 's' : ''} • Free cancellation up to 24h before</div>
+    </div>
+  `;
+
+  renderBookingWidget();
+}
+
+function renderBookingWidget() {
+  const s   = SPACES.find(x => x.id === state.detail.spaceId);
+  const det = state.detail;
+  const cal = renderCalendar();
+  const slots = det.selectedDate ? renderTimeSlots() : '';
+  const duration = det.selectedStart !== null ? renderDuration() : '';
+  const summary = (det.selectedStart !== null && det.selectedDuration) ? renderSummary(s) : '';
+  const canBook  = det.selectedDate && det.selectedStart !== null && det.selectedDuration;
+
+  document.getElementById('booking-widget').innerHTML = `
+    <div class="widget-price">
+      <span class="amount">$${s.pricePerHour}</span>
+      <span class="per">/ hour</span>
+      <span style="margin-left:auto;font-size:12px;color:var(--muted)">★ ${s.rating}</span>
+    </div>
+    ${cal}
+    ${slots}
+    ${duration}
+    ${summary}
+    <button class="btn btn-primary btn-full btn-lg" ${canBook ? '' : 'disabled'} onclick="openBookingForm()">
+      ${canBook ? 'Book Now →' : 'Select Date & Time'}
+    </button>
+    <div style="text-align:center;font-size:11px;color:var(--muted);margin-top:8px">No charge until confirmed</div>
+  `;
+}
+
+// ── Calendar ──────────────────────────────────────────────
+
+function renderCalendar() {
+  const { calYear, calMonth, selectedDate, spaceId } = state.detail;
+  const firstDay = new Date(calYear, calMonth, 1);
+  const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+  const startDow = firstDay.getDay();
+  const today    = new Date();
+  today.setHours(0, 0, 0, 0);
+  const monthLabel = firstDay.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push('<div class="cal-day empty"></div>');
+  for (let d = 1; d <= lastDate; d++) {
+    const date    = new Date(calYear, calMonth, d);
+    const dateStr = date.toISOString().split('T')[0];
+    const isPast  = date < today;
+    const isSel   = dateStr === selectedDate;
+    const isFull  = !isPast && isDayFullyBooked(spaceId, dateStr);
+    const hasBook = !isPast && isDayPartiallyBooked(spaceId, dateStr);
+    const isToday = date.getTime() === today.getTime();
+
+    let cls = 'cal-day';
+    if (isPast)  cls += ' past';
+    else if (isFull) cls += ' fully-booked';
+    else cls += ' available';
+    if (isSel)   cls += ' selected';
+    if (isToday && !isPast) cls += ' today';
+    if (hasBook && !isFull && !isPast) cls += ' has-bookings';
+
+    const onclick = !isPast && !isFull ? `onclick="selectDate('${dateStr}')"` : '';
+    cells.push(`<div class="${cls}" ${onclick}>${d}</div>`);
+  }
+
+  return `
+    <div class="calendar">
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <span class="month-label">${monthLabel}</span>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="cal-weekdays">
+        ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => `<div class="cal-weekday">${d}</div>`).join('')}
+      </div>
+      <div class="cal-grid">${cells.join('')}</div>
+      <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:50%;background:var(--warning)"></div>Partially booked</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:50%;background:#fee2e2;border:1px solid #fca5a5"></div>Fully booked</div>
+      </div>
+    </div>`;
+}
+
+function changeMonth(dir) {
+  let { calYear, calMonth } = state.detail;
+  calMonth += dir;
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0;  calYear++; }
+  const now = new Date();
+  if (calYear < now.getFullYear() || (calYear === now.getFullYear() && calMonth < now.getMonth())) return;
+  state.detail.calYear  = calYear;
+  state.detail.calMonth = calMonth;
+  state.detail.selectedDate     = null;
+  state.detail.selectedStart    = null;
+  state.detail.selectedDuration = null;
+  renderBookingWidget();
+}
+
+function selectDate(dateStr) {
+  state.detail.selectedDate     = dateStr;
+  state.detail.selectedStart    = null;
+  state.detail.selectedDuration = null;
+  renderBookingWidget();
+}
+
+// ── Time Slots ────────────────────────────────────────────
+
+function renderTimeSlots() {
+  const { spaceId, selectedDate, selectedStart } = state.detail;
+  const booked = getBookedSlots(spaceId, selectedDate);
+  const now    = new Date();
+  const dateObj = new Date(selectedDate + 'T00:00:00');
+  const isToday = dateObj.toDateString() === now.toDateString();
+
+  const fmtDate = new Date(selectedDate).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const slotBtns = HOURS.map(({ hour, label }) => {
+    const isPast   = isToday && hour <= now.getHours();
+    const isBooked = booked.has(hour);
+    let cls = 'time-slot-btn';
+    if (isPast)         cls += ' past';
+    else if (isBooked)  cls += ' booked';
+    else if (hour === selectedStart) cls += ' selected';
+
+    const onclick = !isPast && !isBooked ? `onclick="selectStart(${hour})"` : '';
+    const lbl     = isBooked ? 'Booked' : label;
+    return `<button class="${cls}" ${onclick}>${lbl}</button>`;
+  }).join('');
+
+  return `
+    <div class="time-section">
+      <div class="time-section-label">Select Start Time — ${fmtDate}</div>
+      <div class="time-slots-grid">${slotBtns}</div>
+    </div>`;
+}
+
+function selectStart(hour) {
+  state.detail.selectedStart    = hour;
+  state.detail.selectedDuration = null;
+  renderBookingWidget();
+}
+
+// ── Duration ──────────────────────────────────────────────
+
+function renderDuration() {
+  const { spaceId, selectedDate, selectedStart, selectedDuration } = state.detail;
+  const space  = SPACES.find(x => x.id === spaceId);
+  const booked = getBookedSlots(spaceId, selectedDate);
+  const maxAvail = (() => {
+    let m = 0;
+    for (let h = selectedStart; h < 20 && !booked.has(h); h++) m++;
+    return m;
+  })();
+
+  const opts = [1, 2, 3, 4, 6, 8].filter(d => d >= space.minHours && d <= maxAvail);
+
+  return `
+    <div class="time-section">
+      <div class="time-section-label">Duration</div>
+      <div class="duration-row">
+        ${opts.map(d => `
+          <button class="dur-btn ${d === selectedDuration ? 'selected' : ''}" onclick="selectDuration(${d})">${d}h</button>
+        `).join('')}
+        ${opts.length === 0 ? '<span style="font-size:12px;color:var(--danger)">No availability for this start time</span>' : ''}
+      </div>
+    </div>`;
+}
+
+function selectDuration(d) {
+  state.detail.selectedDuration = d;
+  renderBookingWidget();
+}
+
+// ── Summary ───────────────────────────────────────────────
+
+function renderSummary(s) {
+  const { selectedDate, selectedStart, selectedDuration } = state.detail;
+  const startH  = HOURS.find(h => h.hour === selectedStart);
+  const endHour = selectedStart + selectedDuration;
+  const endH    = HOURS.find(h => h.hour === endHour) || { label: endHour < 12 ? `${endHour}:00 AM` : endHour === 12 ? '12:00 PM' : `${endHour - 12}:00 PM` };
+  const total   = s.pricePerHour * selectedDuration;
+  const dateStr = new Date(selectedDate).toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  return `
+    <div class="booking-summary">
+      <div class="booking-summary-row"><span>Date</span><span style="color:var(--text);font-weight:600">${dateStr}</span></div>
+      <div class="booking-summary-row"><span>Time</span><span style="color:var(--text);font-weight:600">${startH.label} – ${endH.label}</span></div>
+      <div class="booking-summary-row"><span>Duration</span><span style="color:var(--text);font-weight:600">${selectedDuration} hour${selectedDuration > 1 ? 's' : ''}</span></div>
+      <div class="booking-summary-row"><span>Rate</span><span>$${s.pricePerHour}/hr</span></div>
+      <div class="booking-summary-row total"><span>Total</span><span style="color:var(--primary)">$${total}</span></div>
+    </div>`;
+}
+
+// ── Book Now ─────────────────────────────────────────────
+
+function openBookingForm() {
+  const s = SPACES.find(x => x.id === state.detail.spaceId);
+  const { selectedDate, selectedStart, selectedDuration } = state.detail;
+  const startH  = HOURS.find(h => h.hour === selectedStart);
+  const endHour = selectedStart + selectedDuration;
+  const endH    = { label: endHour < 12 ? `${endHour}:00 AM` : endHour === 12 ? '12:00 PM' : `${endHour - 12}:00 PM` };
+  const total   = s.pricePerHour * selectedDuration;
+  const dateStr = new Date(selectedDate).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  document.getElementById('form-recap').innerHTML = `
+    <div class="recap-row"><span>Space</span><span style="font-weight:700;color:var(--text)">${s.name}</span></div>
+    <div class="recap-row"><span>Date</span><span>${dateStr}</span></div>
+    <div class="recap-row"><span>Time</span><span>${startH.label} – ${endH.label}</span></div>
+    <div class="recap-row"><span>Duration</span><span>${selectedDuration}h</span></div>
+    <div class="recap-row total"><span>Total</span><span>$${total}</span></div>
+  `;
+  openModal('modal-form');
+}
+
+function confirmBooking() {
+  const first     = document.getElementById('f-first').value.trim();
+  const last      = document.getElementById('f-last').value.trim();
+  const email     = document.getElementById('f-email').value.trim();
+  const attendees = document.getElementById('f-attendees').value.trim();
+  const purpose   = document.getElementById('f-purpose').value;
+
+  if (!first || !last || !email || !attendees || !purpose) {
+    alert('Please fill in all required fields (*).');
+    return;
+  }
+
+  const s = SPACES.find(x => x.id === state.detail.spaceId);
+  const { selectedDate, selectedStart, selectedDuration } = state.detail;
+  const endHour = selectedStart + selectedDuration;
+  const total   = s.pricePerHour * selectedDuration;
+  const refId   = genId();
+
+  addBooking({
+    id: refId,
+    spaceId: s.id,
+    spaceName: s.name,
+    spaceGradient: s.gradient,
+    date: selectedDate,
+    startHour: selectedStart,
+    endHour,
+    duration: selectedDuration,
+    totalCost: total,
+    status: 'confirmed',
+    guestName: `${first} ${last}`,
+    email,
+    phone: document.getElementById('f-phone').value.trim(),
+    org: document.getElementById('f-org').value.trim(),
+    purpose,
+    notes: document.getElementById('f-notes').value.trim(),
+    attendees: +attendees,
+    createdAt: new Date().toISOString(),
+  });
+
+  closeModal('modal-form');
+  clearBookingForm();
+
+  // Show confirmation
+  document.getElementById('confirm-ref-code').textContent = refId;
+  const startH  = HOURS.find(h => h.hour === selectedStart);
+  const endH    = { label: endHour < 12 ? `${endHour}:00 AM` : endHour === 12 ? '12:00 PM' : `${endHour - 12}:00 PM` };
+  const dateStr = new Date(selectedDate).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  document.getElementById('confirm-summary').innerHTML = `
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Space</span><span style="font-weight:600">${s.name}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Date</span><span>${dateStr}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Time</span><span>${startH.label} – ${endH.label}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Guest</span><span>${first} ${last}</span></div>
+        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:var(--primary);padding-top:8px;border-top:1px solid var(--border);margin-top:4px"><span>Total Paid</span><span>$${total}</span></div>
+      </div>
+    </div>
+  `;
+  openModal('modal-confirm');
+  updateBadge();
+
+  // Reset booking selection
+  state.detail.selectedDate     = null;
+  state.detail.selectedStart    = null;
+  state.detail.selectedDuration = null;
+}
+
+function clearBookingForm() {
+  ['f-first','f-last','f-email','f-phone','f-attendees','f-org','f-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-purpose').value = '';
+}
+
+// ════════════════════════════════════════════════════════════
+// MY BOOKINGS
+// ════════════════════════════════════════════════════════════
+
+function renderBookings() {
+  const all  = getBookings();
+  const now  = new Date();
+  const tab  = state.booking.tab;
+
+  const classify = b => {
+    if (b.status === 'cancelled') return 'cancelled';
+    const end = new Date(b.date + 'T' + String(b.endHour).padStart(2,'0') + ':00:00');
+    return end < now ? 'past' : 'upcoming';
+  };
+
+  const filtered = all.filter(b => classify(b) === tab);
+
+  if (filtered.length === 0) {
+    document.getElementById('bookings-list').innerHTML = `
+      <div class="empty-state">
+        <div class="emo">${tab === 'upcoming' ? '📅' : tab === 'past' ? '📋' : '🗑️'}</div>
+        <h3>No ${tab} bookings</h3>
+        <p>${tab === 'upcoming' ? 'Book a space to get started.' : 'Your ' + tab + ' bookings will appear here.'}</p>
+        ${tab === 'upcoming' ? `<button class="btn btn-primary" onclick="showView('home')">Browse Spaces</button>` : ''}
+      </div>`;
+    return;
+  }
+
+  document.getElementById('bookings-list').innerHTML = filtered
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .map(b => {
+      const space  = SPACES.find(s => s.id === b.spaceId) || {};
+      const startH = HOURS.find(h => h.hour === b.startHour) || { label: b.startHour + ':00' };
+      const endLbl = b.endHour < 12 ? `${b.endHour}:00 AM` : b.endHour === 12 ? '12:00 PM' : `${b.endHour - 12}:00 PM`;
+      const dateStr = new Date(b.date).toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const bClass  = classify(b);
+      const statusLabels = { confirmed: 'Confirmed', cancelled: 'Cancelled', past: 'Completed' };
+      const statusCls    = { confirmed: 'status-confirmed', cancelled: 'status-cancelled', past: 'status-past' };
+
+      return `
+      <div class="booking-card" id="bcard-${b.id}">
+        <div class="booking-card-img" style="background:${b.spaceGradient || space.gradient || '#888'}"></div>
+        <div class="booking-card-body">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <div class="booking-card-title">${b.spaceName}</div>
+            <span class="booking-status ${statusCls[bClass]}">${statusLabels[bClass]}</span>
+          </div>
+          <div class="booking-card-meta">
+            <span>📅 ${dateStr}</span>
+            <span>🕐 ${startH.label} – ${endLbl}</span>
+            <span>⏱️ ${b.duration}h</span>
+            <span>👥 ${b.attendees || '—'} attendees</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">📋 ${b.purpose} • Ref: <strong>${b.id}</strong></div>
+          <div class="booking-card-actions">
+            <span style="font-size:15px;font-weight:800;color:var(--primary)">$${b.totalCost}</span>
+            ${bClass === 'upcoming' ? `
+              <button class="btn btn-outline btn-sm" onclick="viewSpace(${b.spaceId})">View Space</button>
+              <button class="btn btn-danger btn-sm" onclick="cancelMyBooking('${b.id}')">Cancel</button>
+            ` : ''}
+            ${bClass === 'past' ? `
+              <button class="btn btn-outline btn-sm" onclick="openDetail(${b.spaceId})">Book Again</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function viewSpace(spaceId) { openDetail(spaceId); }
+
+function cancelMyBooking(id) {
+  if (!confirm('Cancel this booking? This action cannot be undone.')) return;
+  cancelBooking(id);
+  renderBookings();
+  updateBadge();
+}
+
+document.querySelectorAll('.booking-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.booking-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.booking.tab = tab.dataset.btab;
+    renderBookings();
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+// ADMIN
+// ════════════════════════════════════════════════════════════
+
+function renderAdmin() {
+  const all    = getBookings();
+  const active = all.filter(b => b.status !== 'cancelled');
+  const today  = new Date().toISOString().split('T')[0];
+  const todayB = active.filter(b => b.date === today);
+  const revenue = active.reduce((s, b) => s + b.totalCost, 0);
+
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="admin-stat-card"><div class="val">${all.length}</div><div class="lbl">Total Bookings</div></div>
+    <div class="admin-stat-card"><div class="val">${active.length}</div><div class="lbl">Active Bookings</div></div>
+    <div class="admin-stat-card"><div class="val">${todayB.length}</div><div class="lbl">Today's Bookings</div></div>
+    <div class="admin-stat-card"><div class="val">$${revenue.toLocaleString()}</div><div class="lbl">Total Revenue</div></div>
+    <div class="admin-stat-card"><div class="val">${all.filter(b=>b.status==='cancelled').length}</div><div class="lbl">Cancellations</div></div>
+    <div class="admin-stat-card"><div class="val">${SPACES.length}</div><div class="lbl">Spaces Listed</div></div>
+  `;
+
+  // Bookings table
+  const sorted = [...all].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  document.getElementById('admin-bookings-table').innerHTML = `
+    <h3>All Bookings (${all.length})</h3>
+    ${all.length === 0 ? '<div style="padding:30px;text-align:center;color:var(--muted)">No bookings yet.</div>' : `
+    <table>
+      <thead><tr>
+        <th>Ref</th><th>Space</th><th>Guest</th><th>Date</th><th>Time</th><th>Duration</th><th>Total</th><th>Status</th><th>Action</th>
+      </tr></thead>
+      <tbody>
+        ${sorted.map(b => {
+          const startH = HOURS.find(h => h.hour === b.startHour) || { label: b.startHour + ':00' };
+          const endLbl = b.endHour < 12 ? `${b.endHour}:00 AM` : b.endHour === 12 ? '12:00 PM' : `${b.endHour-12}:00 PM`;
+          const cls = b.status === 'cancelled' ? 'status-cancelled' : 'status-confirmed';
+          const lbl = b.status === 'cancelled' ? 'Cancelled' : 'Confirmed';
+          return `<tr>
+            <td><code style="font-size:11px;color:var(--primary)">${b.id}</code></td>
+            <td><strong>${b.spaceName}</strong></td>
+            <td>${b.guestName}<br><span style="font-size:11px;color:var(--muted)">${b.email}</span></td>
+            <td>${new Date(b.date).toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'})}</td>
+            <td>${startH.label}–${endLbl}</td>
+            <td>${b.duration}h</td>
+            <td style="font-weight:700;color:var(--primary)">$${b.totalCost}</td>
+            <td><span class="booking-status ${cls}">${lbl}</span></td>
+            <td>${b.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="adminCancel('${b.id}')">Cancel</button>` : '—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`}
+  `;
+
+  // Spaces utilization
+  document.getElementById('admin-spaces-table').innerHTML = `
+    <h3>Space Utilization</h3>
+    <table>
+      <thead><tr><th>Space</th><th>Type</th><th>Capacity</th><th>Price/hr</th><th>Rating</th><th>Total Bookings</th><th>Revenue</th><th>Utilization</th></tr></thead>
+      <tbody>
+        ${SPACES.map(s => {
+          const sb  = active.filter(b => b.spaceId === s.id);
+          const rev = sb.reduce((sum, b) => sum + b.totalCost, 0);
+          const util = Math.min(100, Math.round((sb.length / Math.max(active.length, 1)) * 100 * 3));
+          return `<tr>
+            <td><strong>${s.name}</strong></td>
+            <td><span class="tag">${TYPE_LABELS[s.type]}</span></td>
+            <td>${s.capacity}</td>
+            <td>$${s.pricePerHour}</td>
+            <td>★ ${s.rating}</td>
+            <td>${sb.length}</td>
+            <td style="font-weight:600">$${rev}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="util-bar"><div class="util-fill" style="width:${util}%"></div></div>
+                <span style="font-size:12px;color:var(--muted)">${util}%</span>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function adminCancel(id) {
+  if (!confirm('Cancel this booking from admin?')) return;
+  cancelBooking(id);
+  renderAdmin();
+  updateBadge();
+}
+
+// ════════════════════════════════════════════════════════════
+// MODALS
+// ════════════════════════════════════════════════════════════
+
+function openModal(id)  { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('show'); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+});
+
+// ════════════════════════════════════════════════════════════
+// BADGE
+// ════════════════════════════════════════════════════════════
+
+function updateBadge() {
+  const count = getBookings().filter(b => {
+    if (b.status === 'cancelled') return false;
+    return new Date(b.date + 'T' + String(b.endHour).padStart(2,'0') + ':00:00') >= new Date();
+  }).length;
+  const badge = document.getElementById('bookings-badge');
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline' : 'none';
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+
+seedDemoBookings();
+renderSpaces();
+updateBadge();
+</script>
+</body>
+</html>

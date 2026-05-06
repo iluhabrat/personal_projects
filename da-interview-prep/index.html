@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DA Interview Prep</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0c0c1d;
+      --surface:  #13132b;
+      --card:     #1a1a3a;
+      --border:   #2a2a50;
+      --text:     #e2e8f0;
+      --muted:    #6b7280;
+      --accent:   #6366f1;
+      --sql:      #06b6d4;
+      --stats:    #a855f7;
+      --python:   #22c55e;
+      --business: #f59e0b;
+      --prob:     #ec4899;
+      --viz:      #3b82f6;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 { font-size: 18px; font-weight: 700; color: #fff; }
+    header h1 span { color: var(--accent); }
+    .header-sub { font-size: 12px; color: var(--muted); }
+
+    /* ── Nav ── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 4px;
+      padding: 0 32px;
+    }
+    .nav-tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── Layout ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── Category pills ── */
+    .cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .cat-sql      { background: rgba(6,182,212,.15);   color: var(--sql); }
+    .cat-stats    { background: rgba(168,85,247,.15);  color: var(--stats); }
+    .cat-python   { background: rgba(34,197,94,.15);   color: var(--python); }
+    .cat-business { background: rgba(245,158,11,.15);  color: var(--business); }
+    .cat-prob     { background: rgba(236,72,153,.15);  color: var(--prob); }
+    .cat-viz      { background: rgba(59,130,246,.15);  color: var(--viz); }
+
+    .diff-easy   { background: rgba(34,197,94,.15);  color: #22c55e; }
+    .diff-medium { background: rgba(245,158,11,.15); color: #f59e0b; }
+    .diff-hard   { background: rgba(239,68,68,.15);  color: #ef4444; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #3a3a60; }
+    .card.reviewed { border-left: 3px solid #22c55e; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: #4a4a70; }
+    .btn-green { background: rgba(34,197,94,.2); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+    .btn-green:hover { background: rgba(34,197,94,.3); }
+    .btn-green.done { background: rgba(34,197,94,.3); color: #4ade80; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    /* ── Search / Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .search-input {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 14px;
+      color: var(--text);
+      font-size: 13px;
+      width: 240px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
+
+    .filter-btn {
+      padding: 7px 14px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover, .filter-btn.active { color: var(--text); border-color: #5a5a90; background: var(--card); }
+    .filter-btn.active { color: #fff; }
+    .fb-sql.active      { border-color: var(--sql);      color: var(--sql); }
+    .fb-stats.active    { border-color: var(--stats);    color: var(--stats); }
+    .fb-python.active   { border-color: var(--python);   color: var(--python); }
+    .fb-business.active { border-color: var(--business); color: var(--business); }
+    .fb-prob.active     { border-color: var(--prob);     color: var(--prob); }
+    .fb-viz.active      { border-color: var(--viz);      color: var(--viz); }
+
+    /* ── Question card ── */
+    .q-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .q-text { font-size: 15px; font-weight: 500; line-height: 1.5; flex: 1; }
+    .q-meta { display: flex; gap: 6px; margin-bottom: 10px; }
+    .q-answer { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .q-answer.open { display: block; }
+    .q-answer p { color: #c4c4d4; line-height: 1.7; margin-bottom: 10px; }
+    .q-answer code {
+      background: #0d0d20;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 10px 14px;
+      display: block;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12px;
+      color: #a5f3fc;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 8px 0;
+    }
+    .q-actions { display: flex; gap: 8px; align-items: center; }
+    .q-num { font-size: 12px; color: var(--muted); min-width: 28px; }
+
+    /* ── Stats counter ── */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .stat-card .val { font-size: 28px; font-weight: 700; color: var(--accent); }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+    /* ── Quiz ── */
+    #quiz-setup { max-width: 560px; }
+    #quiz-setup h2 { font-size: 20px; margin-bottom: 6px; }
+    #quiz-setup p  { color: var(--muted); margin-bottom: 24px; }
+
+    .setup-group { margin-bottom: 20px; }
+    .setup-group label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+    .option-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .opt-btn {
+      padding: 8px 18px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .opt-btn.selected { border-color: var(--accent); color: var(--accent); background: rgba(99,102,241,.1); }
+
+    #quiz-active { display: none; }
+    #quiz-results { display: none; }
+
+    .quiz-progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .quiz-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .quiz-q-num { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .quiz-q-text { font-size: 18px; font-weight: 600; line-height: 1.5; margin-bottom: 24px; }
+    .quiz-timer { font-size: 20px; font-weight: 700; color: var(--accent); float: right; }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .quiz-option {
+      padding: 14px 18px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.4;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .quiz-option:hover:not(.disabled) { border-color: var(--accent); background: rgba(99,102,241,.08); }
+    .quiz-option.selected { border-color: var(--accent); background: rgba(99,102,241,.15); }
+    .quiz-option.correct { border-color: #22c55e !important; background: rgba(34,197,94,.15) !important; color: #4ade80; }
+    .quiz-option.wrong   { border-color: #ef4444 !important; background: rgba(239,68,68,.12) !important; color: #f87171; }
+    .quiz-option.disabled { cursor: default; }
+
+    .quiz-explanation {
+      display: none;
+      background: rgba(99,102,241,.08);
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 9px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      color: #c4c4e0;
+    }
+    .quiz-explanation.show { display: block; }
+    .quiz-explanation strong { color: var(--text); }
+
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; }
+
+    /* Results */
+    #quiz-results { text-align: center; padding: 40px 20px; }
+    .result-score { font-size: 64px; font-weight: 800; color: var(--accent); }
+    .result-label { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+    .result-grade { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .result-bars { text-align: left; max-width: 400px; margin: 0 auto 32px; }
+    .result-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+    .result-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .result-bar-fill  { height: 100%; border-radius: 3px; }
+
+    /* ── Stats Lab ── */
+    .lab-grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+    @media (max-width: 760px) { .lab-grid { grid-template-columns: 1fr; } }
+
+    .lab-input textarea {
+      width: 100%;
+      height: 160px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text);
+      font-family: monospace;
+      font-size: 13px;
+      resize: vertical;
+      outline: none;
+    }
+    .lab-input textarea:focus { border-color: var(--accent); }
+    .lab-hint { font-size: 11px; color: var(--muted); margin-top: 6px; margin-bottom: 12px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stat-item .s-lbl { font-size: 12px; color: var(--muted); }
+    .stat-item .s-val { font-size: 16px; font-weight: 700; color: var(--accent); }
+
+    .chart-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .chart-box h3 { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+
+    /* ── Progress ── */
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .progress-cat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .progress-cat h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; }
+    .pbar-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+    .pbar-fill  { height: 100%; border-radius: 4px; transition: width 0.4s; }
+    .pbar-meta  { font-size: 11px; color: var(--muted); }
+
+    .quiz-history { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+    .quiz-history h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-score { font-weight: 700; }
+    .score-good  { color: #22c55e; }
+    .score-ok    { color: #f59e0b; }
+    .score-bad   { color: #ef4444; }
+
+    .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+    .empty-state .big { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { margin-bottom: 16px; }
+
+    /* ── SQL Ref ── */
+    .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .ref-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+    .ref-card h3 { font-size: 14px; font-weight: 700; color: var(--sql); margin-bottom: 12px; }
+    .ref-card code {
+      background: #0d0d20;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: block;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 12px;
+      color: #a5f3fc;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.6;
+    }
+    .ref-card p { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #3a3a60; border-radius: 3px; }
+
+    select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .tag { font-size: 10px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>DA Interview <span>Prep</span></h1>
+    <div class="header-sub">Data Analyst Interview Preparation Tool</div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-tab active" data-tab="questions">📚 Questions</div>
+  <div class="nav-tab" data-tab="quiz">🧠 Quiz</div>
+  <div class="nav-tab" data-tab="stats">📊 Stats Lab</div>
+  <div class="nav-tab" data-tab="sqlref">🗄️ SQL Reference</div>
+  <div class="nav-tab" data-tab="progress">📈 Progress</div>
+</nav>
+
+<main>
+
+  <!-- ── QUESTIONS ── -->
+  <section id="questions" class="section active">
+    <div class="stats-row" id="q-stats-row"></div>
+    <div class="filter-bar">
+      <input type="text" class="search-input" id="q-search" placeholder="Search questions…">
+      <button class="filter-btn active" data-cat="all">All</button>
+      <button class="filter-btn fb-sql" data-cat="sql">SQL</button>
+      <button class="filter-btn fb-stats" data-cat="stats">Statistics</button>
+      <button class="filter-btn fb-python" data-cat="python">Python</button>
+      <button class="filter-btn fb-business" data-cat="business">Business</button>
+      <button class="filter-btn fb-prob" data-cat="prob">Probability</button>
+      <button class="filter-btn fb-viz" data-cat="viz">Data Viz</button>
+      <select id="diff-filter">
+        <option value="all">All difficulties</option>
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="reset-progress-btn">Reset Progress</button>
+    </div>
+    <div id="q-list"></div>
+  </section>
+
+  <!-- ── QUIZ ── -->
+  <section id="quiz" class="section">
+    <div id="quiz-setup">
+      <h2>Quiz Mode</h2>
+      <p>Test yourself with curated interview questions.</p>
+
+      <div class="setup-group">
+        <label>Category</label>
+        <div class="option-row" id="quiz-cat-opts">
+          <button class="opt-btn selected" data-val="all">All</button>
+          <button class="opt-btn" data-val="sql">SQL</button>
+          <button class="opt-btn" data-val="stats">Statistics</button>
+          <button class="opt-btn" data-val="python">Python</button>
+          <button class="opt-btn" data-val="business">Business</button>
+          <button class="opt-btn" data-val="prob">Probability</button>
+          <button class="opt-btn" data-val="viz">Data Viz</button>
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <label>Number of Questions</label>
+        <div class="option-row" id="quiz-count-opts">
+          <button class="opt-btn selected" data-val="5">5</button>
+          <button class="opt-btn" data-val="10">10</button>
+          <button class="opt-btn" data-val="15">15</button>
+          <button class="opt-btn" data-val="20">20</button>
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <label>Difficulty</label>
+        <div class="option-row" id="quiz-diff-opts">
+          <button class="opt-btn selected" data-val="all">All</button>
+          <button class="opt-btn" data-val="easy">Easy</button>
+          <button class="opt-btn" data-val="medium">Medium</button>
+          <button class="opt-btn" data-val="hard">Hard</button>
+        </div>
+      </div>
+
+      <div class="setup-group">
+        <label>Timer (per question)</label>
+        <div class="option-row" id="quiz-timer-opts">
+          <button class="opt-btn selected" data-val="0">No timer</button>
+          <button class="opt-btn" data-val="30">30s</button>
+          <button class="opt-btn" data-val="60">60s</button>
+          <button class="opt-btn" data-val="90">90s</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="start-quiz-btn" style="width:100%;padding:12px">Start Quiz</button>
+    </div>
+
+    <div id="quiz-active">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="quiz-q-num" id="quiz-q-num"></div>
+        <div class="quiz-timer" id="quiz-timer-display"></div>
+      </div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-prog-fill"></div></div>
+      <div id="quiz-cat-badge" style="margin-bottom:10px"></div>
+      <div class="quiz-q-text" id="quiz-q-text"></div>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="quiz-explanation" id="quiz-explanation"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-ghost" id="quiz-skip-btn">Skip</button>
+        <button class="btn btn-primary" id="quiz-next-btn" disabled>Next →</button>
+      </div>
+    </div>
+
+    <div id="quiz-results">
+      <div class="result-score" id="result-score"></div>
+      <div class="result-label">Correct answers</div>
+      <div class="result-grade" id="result-grade"></div>
+      <div style="color:var(--muted);margin-bottom:32px" id="result-sub"></div>
+      <div class="result-bars" id="result-bars"></div>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn btn-ghost" id="review-quiz-btn">Review Answers</button>
+        <button class="btn btn-primary" id="new-quiz-btn">New Quiz</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS LAB ── -->
+  <section id="stats" class="section">
+    <h2 style="margin-bottom:6px">Stats Lab</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Enter numbers and get instant descriptive statistics — practice for real interview data questions.</p>
+
+    <div class="lab-grid">
+      <div>
+        <div class="lab-input">
+          <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:8px">Your Data</label>
+          <textarea id="lab-input" placeholder="Enter numbers separated by commas or newlines:&#10;&#10;23, 45, 12, 67, 34&#10;89, 56, 78, 90, 11"></textarea>
+          <div class="lab-hint">Tip: paste any numeric data — sales figures, response times, scores, etc.</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" id="lab-compute-btn" style="flex:1">Compute Stats</button>
+            <button class="btn btn-ghost" id="lab-sample-btn">Load Sample</button>
+            <button class="btn btn-ghost" id="lab-clear-btn">Clear</button>
+          </div>
+        </div>
+
+        <div id="lab-results" style="display:none;margin-top:20px">
+          <div class="stats-grid" id="lab-stats-grid"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-box" style="margin-bottom:16px">
+          <h3>Histogram</h3>
+          <canvas id="histogram-chart" height="200"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Box Plot Visualization</h3>
+          <canvas id="boxplot-chart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interview tips section -->
+    <div style="margin-top:32px">
+      <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">📌 Common Stats Interview Questions</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:6px">When to use mean vs median?</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.6">Use <strong style="color:var(--text)">median</strong> when data is skewed or has outliers (e.g. salaries, house prices). Use <strong style="color:var(--text)">mean</strong> when data is symmetric and normally distributed.</div>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:6px">What is a good standard deviation?</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.6">Context-dependent. A low std dev means data is clustered near the mean. Use <strong style="color:var(--text)">CV = (σ/μ) × 100%</strong> to compare variability across different datasets.</div>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:6px">How do you detect outliers?</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.6"><strong style="color:var(--text)">IQR method:</strong> values below Q1 − 1.5×IQR or above Q3 + 1.5×IQR are outliers. Also use <strong style="color:var(--text)">Z-score &gt; 3</strong> for normally distributed data.</div>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:6px">What does skewness tell you?</div>
+          <div style="color:var(--muted);font-size:13px;line-height:1.6"><strong style="color:var(--text)">Positive skew:</strong> tail on right, mean &gt; median (e.g. income). <strong style="color:var(--text)">Negative skew:</strong> tail on left, mean &lt; median. Skewness &gt; |1| is considered significant.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SQL REFERENCE ── -->
+  <section id="sqlref" class="section">
+    <h2 style="margin-bottom:6px">SQL Reference</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Key SQL patterns that come up in data analyst interviews.</p>
+    <div class="ref-grid" id="sql-ref-grid"></div>
+  </section>
+
+  <!-- ── PROGRESS ── -->
+  <section id="progress" class="section">
+    <h2 style="margin-bottom:6px">Your Progress</h2>
+    <p style="color:var(--muted);margin-bottom:24px">Track questions reviewed and quiz performance.</p>
+    <div class="progress-grid" id="progress-cats"></div>
+    <div class="quiz-history">
+      <h3>Quiz History</h3>
+      <div id="quiz-history-list"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+
+const CATEGORIES = {
+  sql:      { label: 'SQL',        color: '#06b6d4' },
+  stats:    { label: 'Statistics', color: '#a855f7' },
+  python:   { label: 'Python',     color: '#22c55e' },
+  business: { label: 'Business',   color: '#f59e0b' },
+  prob:     { label: 'Probability',color: '#ec4899' },
+  viz:      { label: 'Data Viz',   color: '#3b82f6' },
+};
+
+const QUESTIONS = [
+  // ── SQL ──────────────────────────────────────────────────
+  {
+    id: 1, category: 'sql', difficulty: 'easy',
+    question: 'What is the difference between WHERE and HAVING?',
+    options: [
+      'WHERE filters rows before aggregation; HAVING filters groups after aggregation',
+      'WHERE works only on text columns; HAVING works on numeric columns',
+      'WHERE is used with JOINs; HAVING is used with subqueries',
+      'They are interchangeable and can always substitute each other'
+    ],
+    answer: 0,
+    explanation: 'WHERE filters individual rows before GROUP BY is applied, so it cannot use aggregate functions. HAVING filters the resulting groups after GROUP BY, and can use aggregate functions like COUNT(), SUM(), AVG().',
+  },
+  {
+    id: 2, category: 'sql', difficulty: 'easy',
+    question: 'What is the difference between INNER JOIN and LEFT JOIN?',
+    options: [
+      'INNER JOIN returns all rows from both tables; LEFT JOIN returns only left table rows',
+      'INNER JOIN returns only matching rows; LEFT JOIN returns all left table rows plus matched right rows',
+      'INNER JOIN is faster than LEFT JOIN in all cases',
+      'LEFT JOIN requires a primary key; INNER JOIN does not'
+    ],
+    answer: 1,
+    explanation: 'INNER JOIN returns only rows where the join condition matches in both tables. LEFT JOIN returns all rows from the left table; for unmatched rows from the right table, NULL values are returned.',
+  },
+  {
+    id: 3, category: 'sql', difficulty: 'medium',
+    question: 'What is a window function? Which clause activates it?',
+    options: [
+      'A function that filters rows; activated by WHERE',
+      'A function that groups rows; activated by GROUP BY',
+      'A function that performs calculations across related rows without collapsing them; activated by OVER()',
+      'A function that sorts result sets; activated by ORDER BY'
+    ],
+    answer: 2,
+    explanation: 'Window functions compute a value across a set of rows related to the current row, without collapsing them into a single output row (unlike GROUP BY). They use the OVER() clause. Examples: ROW_NUMBER(), RANK(), SUM() OVER(PARTITION BY …), LAG(), LEAD().',
+  },
+  {
+    id: 4, category: 'sql', difficulty: 'medium',
+    question: 'How do you find duplicate records in a table?',
+    options: [
+      'SELECT * FROM table WHERE id = id',
+      'SELECT col, COUNT(*) FROM table GROUP BY col HAVING COUNT(*) > 1',
+      'SELECT DISTINCT col FROM table',
+      'SELECT col FROM table ORDER BY col'
+    ],
+    answer: 1,
+    explanation: 'GROUP BY the column(s) you want to check for duplicates, then use HAVING COUNT(*) > 1 to keep only groups that appear more than once.',
+  },
+  {
+    id: 5, category: 'sql', difficulty: 'medium',
+    question: 'What is the difference between UNION and UNION ALL?',
+    options: [
+      'UNION ALL keeps duplicates; UNION removes them',
+      'UNION ALL is slower; UNION is faster',
+      'UNION requires the same number of columns; UNION ALL does not',
+      'UNION combines tables; UNION ALL joins them'
+    ],
+    answer: 0,
+    explanation: 'UNION removes duplicate rows from the combined result set (requires an extra deduplication pass). UNION ALL keeps all rows including duplicates and is therefore faster. Use UNION ALL when you know there are no duplicates or want to keep them.',
+  },
+  {
+    id: 6, category: 'sql', difficulty: 'medium',
+    question: 'What is a CTE (Common Table Expression) and when would you use it?',
+    options: [
+      'A temporary table stored on disk, used to replace subqueries',
+      'A named temporary result set defined with WITH that exists only for the query, improving readability',
+      'A stored procedure that runs scheduled queries',
+      'A type of index used to speed up complex joins'
+    ],
+    answer: 1,
+    explanation: 'A CTE (WITH clause) defines a named temporary result set scoped to a single query. Benefits: improves readability, allows self-referencing (recursive CTEs), and can be referenced multiple times in the same query. Unlike subqueries, CTEs appear at the top of the query.',
+  },
+  {
+    id: 7, category: 'sql', difficulty: 'hard',
+    question: 'How do you write a query to find the 3rd highest salary in a table?',
+    options: [
+      'SELECT MAX(salary) FROM emp WHERE salary < (SELECT MAX(salary) FROM emp)',
+      'SELECT salary FROM emp ORDER BY salary DESC LIMIT 1 OFFSET 2',
+      'SELECT DISTINCT salary FROM emp ORDER BY salary DESC LIMIT 1 OFFSET 2',
+      'SELECT TOP 3 salary FROM emp ORDER BY salary DESC'
+    ],
+    answer: 2,
+    explanation: 'Using DISTINCT ensures ties are handled correctly. LIMIT 1 OFFSET 2 skips the top 2 unique salaries and returns the 3rd. Alternatively: SELECT salary FROM (SELECT DISTINCT salary FROM emp ORDER BY salary DESC LIMIT 3) t ORDER BY salary LIMIT 1.',
+  },
+  {
+    id: 8, category: 'sql', difficulty: 'medium',
+    question: 'What does COALESCE() do?',
+    options: [
+      'Concatenates multiple string columns',
+      'Returns the count of non-NULL values',
+      'Returns the first non-NULL value from a list of arguments',
+      'Converts NULL to zero in aggregations'
+    ],
+    answer: 2,
+    explanation: 'COALESCE(a, b, c, …) returns the first argument that is not NULL. Commonly used to provide a default value: COALESCE(column, 0) returns 0 when column is NULL. It evaluates arguments left to right and stops at the first non-NULL value.',
+  },
+  {
+    id: 9, category: 'sql', difficulty: 'medium',
+    question: 'What is the difference between DELETE, TRUNCATE, and DROP?',
+    options: [
+      'They are synonyms that all remove all rows from a table',
+      'DELETE removes specific rows (can be rolled back); TRUNCATE removes all rows fast (cannot be rolled back in some DBs); DROP removes the entire table',
+      'DELETE is for rows; TRUNCATE is for columns; DROP is for databases',
+      'TRUNCATE keeps the table structure; DELETE and DROP both remove it'
+    ],
+    answer: 1,
+    explanation: 'DELETE removes specific rows (filtered by WHERE), is logged row-by-row, and can be rolled back. TRUNCATE removes all rows in one operation (faster, minimal logging), but typically cannot be rolled back. DROP removes the entire table schema and all its data permanently.',
+  },
+  {
+    id: 10, category: 'sql', difficulty: 'hard',
+    question: 'How do you calculate a 7-day rolling average in SQL?',
+    options: [
+      'SELECT AVG(value) FROM table GROUP BY date',
+      'SELECT date, AVG(value) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) FROM table',
+      'SELECT date, SUM(value) / 7 FROM table',
+      'SELECT date, value FROM table WHERE date >= CURRENT_DATE - 7'
+    ],
+    answer: 1,
+    explanation: 'Window functions with frame clauses: ROWS BETWEEN 6 PRECEDING AND CURRENT ROW defines a window of the current row and 6 rows before it (7 rows total). AVG() over this window gives the rolling 7-day average.',
+  },
+  {
+    id: 11, category: 'sql', difficulty: 'medium',
+    question: 'What does ROW_NUMBER() vs RANK() vs DENSE_RANK() return for tied values?',
+    options: [
+      'All three return the same value for ties',
+      'ROW_NUMBER gives unique sequential numbers; RANK skips numbers for ties; DENSE_RANK does not skip numbers',
+      'ROW_NUMBER groups ties together; RANK and DENSE_RANK both skip numbers',
+      'RANK and ROW_NUMBER are identical; DENSE_RANK handles ties differently'
+    ],
+    answer: 1,
+    explanation: 'For values 100, 100, 90: ROW_NUMBER → 1, 2, 3 (always unique); RANK → 1, 1, 3 (skips rank 2); DENSE_RANK → 1, 1, 2 (no gaps). Use DENSE_RANK when you want continuous ranking without gaps.',
+  },
+  {
+    id: 12, category: 'sql', difficulty: 'medium',
+    question: 'What is a self JOIN and when would you use it?',
+    options: [
+      'A JOIN of a table with an empty table',
+      'A JOIN of a table with itself, typically to compare rows within the same table',
+      'A JOIN that uses the same column from both tables',
+      'A JOIN that returns the same result regardless of order'
+    ],
+    answer: 1,
+    explanation: 'A self JOIN joins a table to itself using aliases. Common use cases: finding employees and their managers in the same table, comparing rows with adjacent rows, finding pairs that meet a condition. Example: SELECT e.name, m.name FROM employees e JOIN employees m ON e.manager_id = m.id.',
+  },
+  {
+    id: 13, category: 'sql', difficulty: 'easy',
+    question: 'What is the execution order of SQL clauses?',
+    options: [
+      'SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY',
+      'FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY',
+      'FROM → SELECT → WHERE → ORDER BY → GROUP BY → HAVING',
+      'WHERE → FROM → SELECT → GROUP BY → HAVING → ORDER BY'
+    ],
+    answer: 1,
+    explanation: 'SQL logical execution order: FROM (+ JOINs) → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT. This is why you cannot reference a SELECT alias in WHERE (it hasn\'t been evaluated yet), but you can in ORDER BY.',
+  },
+  {
+    id: 14, category: 'sql', difficulty: 'hard',
+    question: 'How do you detect users who made a purchase in consecutive months?',
+    options: [
+      'Use a self JOIN and compare month numbers',
+      'Use LAG() window function to get the previous month\'s purchase date and check if the difference is 1 month',
+      'Use CASE WHEN with date subtraction',
+      'Use EXISTS with a correlated subquery'
+    ],
+    answer: 1,
+    explanation: 'Use LAG(purchase_month) OVER (PARTITION BY user_id ORDER BY purchase_month) to get each user\'s previous purchase month, then filter WHERE DATEDIFF(current_month, prev_month) = 1 (or equivalent). You can also use date_trunc and self-join on consecutive month values.',
+  },
+  {
+    id: 15, category: 'sql', difficulty: 'medium',
+    question: 'What is the difference between a correlated subquery and a regular subquery?',
+    options: [
+      'A correlated subquery runs once; a regular subquery runs for every row of the outer query',
+      'A regular subquery is independent and runs once; a correlated subquery references the outer query and runs for each outer row',
+      'There is no difference in execution; only syntax differs',
+      'A correlated subquery always uses EXISTS; a regular subquery uses IN'
+    ],
+    answer: 1,
+    explanation: 'A regular (non-correlated) subquery executes once and its result is used by the outer query. A correlated subquery references columns from the outer query, so it must re-execute for each row of the outer query — making it potentially slow on large tables. EXISTS is often used with correlated subqueries.',
+  },
+
+  // ── Statistics ───────────────────────────────────────────
+  {
+    id: 16, category: 'stats', difficulty: 'easy',
+    question: 'When should you use median instead of mean?',
+    options: [
+      'When the dataset is very large',
+      'When the data is skewed or contains significant outliers',
+      'When comparing two groups',
+      'When all values are positive'
+    ],
+    answer: 1,
+    explanation: 'The mean is sensitive to outliers; a few extreme values can pull it far from the "typical" value. The median (middle value when sorted) is resistant to outliers. Example: household income data — a few billionaires make the mean misleading, while the median better represents the typical household.',
+  },
+  {
+    id: 17, category: 'stats', difficulty: 'easy',
+    question: 'What is standard deviation?',
+    options: [
+      'The average of all values in the dataset',
+      'The difference between the max and min values',
+      'A measure of how spread out values are from the mean',
+      'The square of the variance'
+    ],
+    answer: 2,
+    explanation: 'Standard deviation (σ) measures the average distance of data points from the mean. Low std dev = data clustered near the mean. High std dev = data widely spread. It is the square root of variance, expressed in the same units as the original data.',
+  },
+  {
+    id: 18, category: 'stats', difficulty: 'medium',
+    question: 'What is a p-value and what does p < 0.05 mean?',
+    options: [
+      'The probability that your hypothesis is true; p < 0.05 means 95% confidence',
+      'The probability of observing results at least as extreme as yours if the null hypothesis were true; p < 0.05 means the result is statistically significant at the 5% level',
+      'The percentage of variance explained by your model',
+      'The probability of making a Type II error'
+    ],
+    answer: 1,
+    explanation: 'The p-value is the probability of getting your observed results (or more extreme) assuming the null hypothesis is true. p < 0.05 means there is less than a 5% chance the result occurred by random chance — conventionally considered statistically significant. It does NOT mean there is a 95% chance your hypothesis is true.',
+  },
+  {
+    id: 19, category: 'stats', difficulty: 'medium',
+    question: 'What is the Central Limit Theorem (CLT)?',
+    options: [
+      'The mean of a large sample always equals the population mean',
+      'The distribution of sample means approaches a normal distribution as sample size increases, regardless of the population distribution',
+      'All data in nature follows a normal distribution',
+      'Larger samples always produce smaller standard deviations'
+    ],
+    answer: 1,
+    explanation: 'The CLT states that the sampling distribution of the mean approaches a normal distribution as sample size (n) increases, regardless of the original population distribution. This is foundational to hypothesis testing and confidence intervals — it\'s why we can use normal-distribution-based tests even when data isn\'t normally distributed (for large n ≥ 30).',
+  },
+  {
+    id: 20, category: 'stats', difficulty: 'medium',
+    question: 'What is the difference between Type I and Type II errors?',
+    options: [
+      'Type I is a calculation error; Type II is a measurement error',
+      'Type I (false positive): rejecting a true null hypothesis; Type II (false negative): failing to reject a false null hypothesis',
+      'Type I occurs with small samples; Type II with large samples',
+      'Type I is more serious than Type II in all scientific contexts'
+    ],
+    answer: 1,
+    explanation: 'Type I error (α): false positive — concluding an effect exists when it doesn\'t (rejecting true H₀). Type II error (β): false negative — missing a real effect (failing to reject false H₀). The significance level α controls Type I error rate. Power (1-β) controls Type II. Reducing one type typically increases the other.',
+  },
+  {
+    id: 21, category: 'stats', difficulty: 'medium',
+    question: 'What is a confidence interval?',
+    options: [
+      'The range within which 95% of individual data points fall',
+      'A range of values that, with a given confidence level, contains the true population parameter',
+      'The probability that the sample mean equals the population mean',
+      'The margin of error in a single measurement'
+    ],
+    answer: 1,
+    explanation: 'A 95% CI means: if we repeated the study many times, 95% of the constructed intervals would contain the true population parameter. It is NOT "95% probability the true value is in this specific interval." A wider CI indicates more uncertainty (smaller sample size or higher variance).',
+  },
+  {
+    id: 22, category: 'stats', difficulty: 'hard',
+    question: 'What is statistical power and what affects it?',
+    options: [
+      'The significance level of a test; affected by sample size and effect size',
+      'The probability of correctly detecting a real effect; increased by larger sample size, larger effect size, or higher α',
+      'The probability of a Type I error; controlled by the significance threshold',
+      'The accuracy of a statistical model; measured by R-squared'
+    ],
+    answer: 1,
+    explanation: 'Power (1 - β) is the probability of correctly rejecting a false null hypothesis — detecting a real effect. Power increases with: larger sample size, larger true effect size, higher significance level (α), lower variance. A power of 0.80 is commonly used as a minimum (80% chance of detecting a real effect).',
+  },
+  {
+    id: 23, category: 'stats', difficulty: 'medium',
+    question: 'What is the difference between correlation and causation?',
+    options: [
+      'They are equivalent: strong correlation proves causation',
+      'Correlation measures the relationship between variables; causation means one variable directly causes change in another — correlation does not imply causation',
+      'Causation is measured by Pearson\'s r; correlation is measured by experiments',
+      'Correlation is always positive; causation can be negative'
+    ],
+    answer: 1,
+    explanation: 'Correlation quantifies the statistical relationship between two variables (Pearson\'s r from -1 to 1). Causation means one variable directly influences another. Correlation ≠ causation because of confounders, reverse causality, or coincidence. Establishing causation requires controlled experiments (A/B tests) or causal inference methods.',
+  },
+  {
+    id: 24, category: 'stats', difficulty: 'medium',
+    question: 'In A/B testing, what is the minimum sample size determined by?',
+    options: [
+      'The total user base size only',
+      'The desired statistical power, significance level, baseline conversion rate, and minimum detectable effect',
+      'The available budget for the test',
+      'The number of metrics being tracked'
+    ],
+    answer: 1,
+    explanation: 'Sample size calculation uses: significance level (α, typically 0.05), power (typically 0.80), baseline conversion rate, and minimum detectable effect (MDE — the smallest lift worth detecting). Smaller MDE or higher power requires larger samples. Use a sample size calculator before running tests to avoid underpowered experiments.',
+  },
+  {
+    id: 25, category: 'stats', difficulty: 'hard',
+    question: 'What is Simpson\'s Paradox?',
+    options: [
+      'When two correlated variables appear uncorrelated in a plot',
+      'A trend that appears in several groups of data but reverses or disappears when the groups are combined',
+      'When sample size is too small to detect an effect',
+      'When outliers create a false correlation between variables'
+    ],
+    answer: 1,
+    explanation: 'Simpson\'s Paradox occurs when a trend present in multiple subgroups disappears or reverses when subgroups are aggregated. Classic example: a drug appears more effective overall, but is less effective in every age subgroup — because the groups were unequally distributed. Always check for confounding variables when aggregating data.',
+  },
+  {
+    id: 26, category: 'stats', difficulty: 'medium',
+    question: 'What is the IQR and how is it used to detect outliers?',
+    options: [
+      'Interquartile Range = Q3 - Q1; outliers fall below Q1 - 1.5×IQR or above Q3 + 1.5×IQR',
+      'Interquartile Ratio = mean/median; outliers are detected when ratio > 1.5',
+      'Inner Quantile Range = 10th to 90th percentile; used only in box plots',
+      'Interquartile Range = max - min; outliers are values 1.5 standard deviations from the mean'
+    ],
+    answer: 0,
+    explanation: 'IQR = Q3 (75th percentile) - Q1 (25th percentile). The "inner fence" outlier rule: lower bound = Q1 - 1.5×IQR, upper bound = Q3 + 1.5×IQR. Values outside these bounds are considered mild outliers. This method is robust to outliers themselves, unlike Z-score.',
+  },
+
+  // ── Python ───────────────────────────────────────────────
+  {
+    id: 27, category: 'python', difficulty: 'easy',
+    question: 'What are three ways to handle missing values in pandas?',
+    options: [
+      'drop(), fill(), replace()',
+      'dropna(), fillna(), or imputing with mean/median/mode',
+      'delete(), update(), fix()',
+      'isnull(), notnull(), empty()'
+    ],
+    answer: 1,
+    explanation: 'dropna() removes rows/columns with NaN. fillna(value) replaces NaN with a specified value (e.g. 0, forward-fill with method="ffill", or backward-fill with method="bfill"). Imputing with df["col"].fillna(df["col"].mean()) replaces NaN with the column mean. Choice depends on context: dropping is fine for small % missing; imputing preserves sample size.',
+  },
+  {
+    id: 28, category: 'python', difficulty: 'easy',
+    question: 'What is the difference between loc[] and iloc[] in pandas?',
+    options: [
+      'loc uses column names only; iloc uses row names only',
+      'loc selects by label/name; iloc selects by integer position',
+      'loc is for DataFrames; iloc is for Series',
+      'loc includes the end index; iloc excludes it (same as Python slicing both)'
+    ],
+    answer: 1,
+    explanation: 'loc is label-based: df.loc["2023-01", "revenue"] uses actual index labels. iloc is position-based: df.iloc[0, 2] uses integer positions (0-indexed). loc includes the endpoint in slicing; iloc does not (like standard Python slicing). When index is integers, they behave similarly but are conceptually different.',
+  },
+  {
+    id: 29, category: 'python', difficulty: 'medium',
+    question: 'When would you use groupby() with transform() instead of agg()?',
+    options: [
+      'agg() is for numeric columns only; transform() works on all data types',
+      'transform() returns a result with the same index as the original DataFrame (broadcasts back); agg() returns one row per group',
+      'transform() is always faster; agg() is more accurate',
+      'They are interchangeable and produce the same output'
+    ],
+    answer: 1,
+    explanation: 'agg() reduces each group to a single summary row. transform() applies a function per group but returns a result with the same shape as the input — useful for adding a group-level statistic back to each row. Example: df["group_mean"] = df.groupby("category")["value"].transform("mean") adds each row\'s group mean as a new column.',
+  },
+  {
+    id: 30, category: 'python', difficulty: 'medium',
+    question: 'What is the difference between merge() and concat() in pandas?',
+    options: [
+      'merge() combines rows; concat() combines columns',
+      'merge() joins DataFrames on column keys (like SQL JOIN); concat() stacks DataFrames along an axis (rows or columns)',
+      'merge() requires matching indexes; concat() does not',
+      'concat() performs an inner join; merge() performs an outer join'
+    ],
+    answer: 1,
+    explanation: 'merge() is a database-style join on one or more key columns (like SQL JOIN). concat() simply stacks DataFrames together along an axis — axis=0 stacks rows, axis=1 stacks columns. Use merge() to combine related tables; use concat() to append data with the same schema.',
+  },
+  {
+    id: 31, category: 'python', difficulty: 'medium',
+    question: 'What does apply() do in pandas and what are alternatives?',
+    options: [
+      'Applies a function to every cell in a DataFrame, like applymap()',
+      'Applies a function along an axis (rows or columns) of a DataFrame or to each element of a Series',
+      'Applies an aggregation function only, like agg()',
+      'Applies SQL-like operations to a DataFrame'
+    ],
+    answer: 1,
+    explanation: 'apply() applies a function along an axis: df.apply(func, axis=1) applies to each row, axis=0 applies to each column. For element-wise: Series.map() for Series, DataFrame.applymap()/map() for DataFrames. apply() is flexible but slow — prefer vectorized operations (NumPy, built-in pandas methods) when performance matters.',
+  },
+  {
+    id: 32, category: 'python', difficulty: 'hard',
+    question: 'How do you calculate a retention curve from a user activity table in pandas?',
+    options: [
+      'Use groupby("user_id").count() and divide by total users',
+      'Merge the table with itself on user_id, compute the week difference, then groupby cohort and week to calculate retention rate',
+      'Use pivot_table() with aggfunc="count" and fill_value=0',
+      'Use resample() with weekly frequency and compute rolling averages'
+    ],
+    answer: 1,
+    explanation: 'Retention analysis: (1) define cohorts by each user\'s first activity date, (2) for each subsequent week, check which cohort users are still active, (3) divide active users per week by cohort size. In pandas: merge activity with cohort table, compute week_number = (activity_date - cohort_start).dt.days // 7, then groupby([cohort, week_number]).nunique() / cohort_size.',
+  },
+  {
+    id: 33, category: 'python', difficulty: 'easy',
+    question: 'What does value_counts() return?',
+    options: [
+      'The number of non-null values in a column',
+      'A sorted Series of unique values and their frequency counts',
+      'A dictionary of column names and their data types',
+      'The percentage of each unique value in a column'
+    ],
+    answer: 1,
+    explanation: 'series.value_counts() returns a Series indexed by unique values, sorted by frequency (most common first) by default. Add normalize=True to get proportions instead of counts. Useful for quick frequency analysis of categorical columns.',
+  },
+  {
+    id: 34, category: 'python', difficulty: 'medium',
+    question: 'What is vectorization in pandas/NumPy and why does it matter?',
+    options: [
+      'Converting data to vectors for machine learning models',
+      'Applying operations to entire arrays at once (C-speed) instead of Python-level loops, resulting in significantly faster execution',
+      'Saving computation results to memory for later reuse',
+      'Converting categorical data to numeric dummy variables'
+    ],
+    answer: 1,
+    explanation: 'Vectorized operations operate on entire arrays in compiled C code, avoiding slow Python loops. Instead of for i in range(len(df)): df[i] * 2, use df["col"] * 2 which is 10-100x faster. When apply() is necessary, it\'s slow because it falls back to Python loops. Always prefer pandas/NumPy built-ins over apply() for performance.',
+  },
+
+  // ── Business ─────────────────────────────────────────────
+  {
+    id: 35, category: 'business', difficulty: 'easy',
+    question: 'What is the difference between a metric and a KPI?',
+    options: [
+      'They are the same thing',
+      'A metric is any measured value; a KPI (Key Performance Indicator) is a metric directly tied to a strategic business goal',
+      'KPIs are quantitative; metrics can be qualitative',
+      'Metrics are used by analysts; KPIs are used only by executives'
+    ],
+    answer: 1,
+    explanation: 'A metric is any quantifiable measurement (e.g. page views, sign-ups, server response time). A KPI is a metric that is critical to achieving a specific business objective (e.g. Monthly Active Users, Churn Rate, Revenue Growth). Not all metrics are KPIs, but all KPIs are metrics. KPIs should be specific, measurable, actionable, and time-bound.',
+  },
+  {
+    id: 36, category: 'business', difficulty: 'easy',
+    question: 'How is churn rate calculated and what does it measure?',
+    options: [
+      'Churn Rate = New Customers / Total Customers; measures growth rate',
+      'Churn Rate = Customers Lost in Period / Customers at Start of Period; measures the rate at which customers stop using a product',
+      'Churn Rate = Revenue Lost / Total Revenue; measures revenue retention',
+      'Churn Rate = Inactive Users / Total Users; measures engagement'
+    ],
+    answer: 1,
+    explanation: 'Monthly Churn Rate = (Customers Lost in Month) / (Customers at Start of Month). Example: 1000 customers at start, 50 leave → 5% churn. Annual churn ≈ 1 - (1 - monthly_churn)^12. High churn indicates product-market fit issues, competition, or poor user experience. Inverse of retention rate.',
+  },
+  {
+    id: 37, category: 'business', difficulty: 'medium',
+    question: 'What is cohort analysis and why is it useful?',
+    options: [
+      'Analyzing the top 20% of users who drive 80% of revenue',
+      'Grouping users who share a common characteristic or experience in a defined time period, then tracking their behavior over time',
+      'Comparing metrics between the control and treatment group in an A/B test',
+      'Segmenting users by demographic characteristics'
+    ],
+    answer: 1,
+    explanation: 'Cohort analysis groups users who joined or first performed an action in the same time period (e.g. January signup cohort) and tracks how each cohort behaves over time. Reveals how retention, revenue, or engagement differs across cohorts — useful to see if product changes improved retention for newer cohorts vs older ones.',
+  },
+  {
+    id: 38, category: 'business', difficulty: 'medium',
+    question: 'You see that revenue is down 10% month-over-month. How do you approach diagnosing the cause?',
+    options: [
+      'Immediately escalate to the engineering team to check for bugs',
+      'Break down revenue by its components (product, region, customer segment, new vs existing), check for data quality issues, and look for correlated external factors',
+      'Calculate the statistical significance and wait for more data',
+      'Check if the decrease affects all users equally and report the finding'
+    ],
+    answer: 1,
+    explanation: 'Diagnose by decomposing: Revenue = Volume × Price. Then break each down by segment, product, channel, region. Check data pipeline for issues first. Look for external factors (seasonality, competitor action, market events). Compare to same period last year. Identify what changed (new pricing? feature removal? acquisition issues?) using funnel analysis.',
+  },
+  {
+    id: 39, category: 'business', difficulty: 'medium',
+    question: 'What is Customer Lifetime Value (LTV/CLV) and how is it estimated?',
+    options: [
+      'The total revenue from a customer\'s first purchase only',
+      'The predicted net revenue from a customer over their entire relationship with the business',
+      'The cost to acquire and retain a customer',
+      'The average order value multiplied by the number of orders per year'
+    ],
+    answer: 1,
+    explanation: 'LTV = Average Revenue per User × Gross Margin × (1 / Churn Rate). Example: $50/month ARPU, 70% margin, 5% monthly churn → LTV = $50 × 0.70 / 0.05 = $700. LTV is critical for determining how much to spend on acquisition (CAC). Healthy businesses maintain LTV:CAC ratio of at least 3:1.',
+  },
+  {
+    id: 40, category: 'business', difficulty: 'hard',
+    question: 'How would you design an A/B test to evaluate a new checkout flow?',
+    options: [
+      'Launch for all users for one week and compare week-over-week metrics',
+      'Randomly split users into control (old flow) and treatment (new flow), define primary metric (conversion rate) and guardrail metrics, calculate required sample size upfront, run until significance, then analyze',
+      'Test on 1% of users first, then increase if metrics improve',
+      'Compare the new flow\'s metrics to industry benchmarks'
+    ],
+    answer: 1,
+    explanation: 'Proper A/B test design: (1) define hypothesis and primary metric (e.g. checkout conversion rate), (2) identify guardrail metrics (revenue, returns), (3) calculate sample size from baseline rate, MDE, α, and power, (4) randomly assign users to control/treatment at the correct unit (user, not session), (5) run for full business cycles, (6) analyze only after reaching sample size, (7) check for novelty effects and segment interactions.',
+  },
+  {
+    id: 41, category: 'business', difficulty: 'medium',
+    question: 'What is the difference between DAU, WAU, and MAU, and why does DAU/MAU matter?',
+    options: [
+      'These are database access metrics; DAU/MAU is an efficiency ratio',
+      'Daily/Weekly/Monthly Active Users; DAU/MAU (stickiness ratio) measures how often monthly users return daily — higher is better',
+      'They measure unique visitors, sessions, and page views respectively',
+      'They are the same metric measured on different time scales with no meaningful relationship'
+    ],
+    answer: 1,
+    explanation: 'DAU = daily active users, WAU = weekly, MAU = monthly. DAU/MAU (stickiness) = what fraction of monthly users engage daily. Facebook targets ~50-65%. Low DAU/MAU means users have the product but rarely use it — engagement issue. Declining MAU vs DAU ratio can signal users becoming power users or total user base shrinking. Choose the right metric based on your product\'s natural usage frequency.',
+  },
+  {
+    id: 42, category: 'business', difficulty: 'easy',
+    question: 'What is funnel analysis?',
+    options: [
+      'A method to forecast revenue using historical trends',
+      'Tracking the step-by-step progression of users through a sequence of actions toward a goal, measuring drop-off at each step',
+      'Segmenting users into high-value and low-value groups',
+      'Comparing conversion rates across different marketing channels'
+    ],
+    answer: 1,
+    explanation: 'Funnel analysis maps user journeys through defined steps (e.g. Visit → Sign Up → Onboard → Purchase → Retain) and measures conversion and drop-off at each step. Helps identify where users disengage so teams can prioritize improvements. Use time constraints (users must complete all steps within N days) for meaningful conversion rates.',
+  },
+
+  // ── Probability ──────────────────────────────────────────
+  {
+    id: 43, category: 'prob', difficulty: 'medium',
+    question: 'What is Bayes\' Theorem and give a real-world example?',
+    options: [
+      'P(A|B) = P(B|A) × P(A) / P(B); used to update probability estimates based on new evidence. Example: medical test accuracy given base disease rate',
+      'The probability of two independent events occurring together equals their product',
+      'The law stating that probabilities of all outcomes must sum to 1',
+      'A formula for calculating the expected value of a discrete random variable'
+    ],
+    answer: 0,
+    explanation: 'Bayes\' Theorem: P(A|B) = P(B|A) × P(A) / P(B). Example: a test for a disease is 99% accurate, disease prevalence is 1%. If you test positive, the probability you actually have the disease is only ~50% (due to many false positives in the large healthy population). This is why base rates matter — often called the "base rate fallacy."',
+  },
+  {
+    id: 44, category: 'prob', difficulty: 'easy',
+    question: 'What is the expected value of a random variable?',
+    options: [
+      'The most likely outcome (mode) of the variable',
+      'The weighted average of all possible values, weighted by their probabilities',
+      'The median value of the probability distribution',
+      'The variance of the distribution squared'
+    ],
+    answer: 1,
+    explanation: 'Expected Value E(X) = Σ x·P(x) — the sum of each possible outcome multiplied by its probability. Example: a die roll has E(X) = 1(1/6) + 2(1/6) + ... + 6(1/6) = 3.5. Doesn\'t have to be a possible outcome. Used in decision-making: choose the action with the highest expected value.',
+  },
+  {
+    id: 45, category: 'prob', difficulty: 'medium',
+    question: 'What is the difference between independent and mutually exclusive events?',
+    options: [
+      'They mean the same thing — events that do not affect each other',
+      'Independent events don\'t affect each other\'s probability; mutually exclusive events cannot both occur at the same time',
+      'Mutually exclusive events are always independent; independent events are never mutually exclusive',
+      'Independent events always have equal probability; mutually exclusive events can have different probabilities'
+    ],
+    answer: 1,
+    explanation: 'Independent: P(A∩B) = P(A)×P(B) — one event\'s occurrence doesn\'t affect the other\'s probability (e.g. two coin flips). Mutually exclusive: P(A∩B) = 0 — they cannot both occur (e.g. rolling a 2 and rolling a 5 on one die). Mutually exclusive events with non-zero probability are NOT independent, because knowing one occurred tells you the other didn\'t.',
+  },
+  {
+    id: 46, category: 'prob', difficulty: 'hard',
+    question: 'In a room of 23 people, what is the approximate probability that two people share a birthday? (Birthday Problem)',
+    options: [
+      'About 6% — with 23 people and 365 days it\'s unlikely',
+      'About 50% — counterintuitively high due to the number of pairs',
+      'About 23/365 ≈ 6.3% — linear scaling',
+      'Exactly 50% — this is the design of the problem'
+    ],
+    answer: 1,
+    explanation: 'The birthday problem: with 23 people, there are C(23,2) = 253 unique pairs, each with a ~1/365 chance of sharing a birthday. The probability that NO pair shares a birthday is (365/365)×(364/365)×...×(343/365) ≈ 49.3%, so P(at least one shared) ≈ 50.7%. This illustrates why we should think in terms of pairs, not individuals.',
+  },
+  {
+    id: 47, category: 'prob', difficulty: 'medium',
+    question: 'What is the Law of Large Numbers?',
+    options: [
+      'Larger datasets always produce more accurate predictions',
+      'As the number of trials increases, the sample mean converges to the true population mean',
+      'Large samples always follow a normal distribution',
+      'The probability of any event approaches 1 as the number of trials increases'
+    ],
+    answer: 1,
+    explanation: 'The Law of Large Numbers states that as sample size n → ∞, the sample mean x̄ → population mean μ. Example: flipping a fair coin 10 times might give 70% heads, but 10,000 flips will converge to ~50%. This is why averages from large samples are more reliable than from small ones, and why casinos always profit in the long run.',
+  },
+
+  // ── Data Viz ─────────────────────────────────────────────
+  {
+    id: 48, category: 'viz', difficulty: 'easy',
+    question: 'When should you use a line chart vs a bar chart?',
+    options: [
+      'Line charts for categorical data; bar charts for time series',
+      'Line charts for continuous trends over time or ordered categories; bar charts for comparing discrete categories',
+      'Line charts when data has one variable; bar charts with multiple variables',
+      'They are interchangeable — use whichever looks better'
+    ],
+    answer: 1,
+    explanation: 'Line charts imply continuity between points — ideal for time series and trends (stock prices, monthly revenue). Bar charts are for discrete, unordered categories where the height/length represents a value (sales by region, ratings by product). Using a line chart for unordered categories implies a false ordering relationship.',
+  },
+  {
+    id: 49, category: 'viz', difficulty: 'easy',
+    question: 'What are the main problems with pie charts and when are they acceptable?',
+    options: [
+      'Pie charts are always worse than bar charts and should never be used',
+      'Humans struggle to compare angles/areas accurately; acceptable only for 2-4 clearly different segments where part-to-whole relationship matters',
+      'Pie charts are only problematic when values are equal',
+      'The only problem is color choice; they are otherwise as effective as bar charts'
+    ],
+    answer: 1,
+    explanation: 'Problems: humans are poor at judging angles/areas compared to bar lengths; slices are hard to compare; labels get cluttered with many categories. Acceptable when: ≤4 categories, values differ significantly, and the "part of a whole" story is important (e.g. 75% market share). Bar charts or waffle charts are usually better alternatives.',
+  },
+  {
+    id: 50, category: 'viz', difficulty: 'medium',
+    question: 'What makes a dashboard effective?',
+    options: [
+      'Including as many metrics as possible on a single screen',
+      'Clear hierarchy of information, context for numbers, appropriate chart types, single purpose/audience, and actionable metrics',
+      'Using bright colors and animations to draw attention to important data',
+      'Always showing the most granular data available so users can drill down'
+    ],
+    answer: 1,
+    explanation: 'Effective dashboards: (1) serve a single clear purpose for a specific audience, (2) show the most important KPI prominently, (3) provide context (vs target, vs prior period), (4) use appropriate chart types for the data, (5) limit to 5-7 key metrics (cognitive load), (6) use color purposefully not decoratively, (7) enable quick action or decision-making.',
+  },
+  {
+    id: 51, category: 'viz', difficulty: 'medium',
+    question: 'What is a heatmap best used for?',
+    options: [
+      'Showing trends in a single variable over time',
+      'Showing the relationship between two categorical variables or geographic density patterns, using color intensity to represent a third variable',
+      'Comparing distributions of multiple variables',
+      'Displaying hierarchical data as nested rectangles'
+    ],
+    answer: 1,
+    explanation: 'Heatmaps use color intensity to represent magnitude across two dimensions. Use cases: correlation matrices (feature correlations), time-based patterns (activity by hour/day), website click maps, geographic density. Effective because they convey patterns across many cells at once. Choose a sequential color scale for continuous data, diverging scale for data with a meaningful midpoint.',
+  },
+  {
+    id: 52, category: 'viz', difficulty: 'medium',
+    question: 'How do you visualize a distribution? Which chart type is best?',
+    options: [
+      'Always use a pie chart with each unique value as a slice',
+      'Histogram for continuous data (showing frequency of ranges), box plot for summary statistics and outlier detection, violin plot for full distribution shape',
+      'Bar chart with one bar per unique value',
+      'Line chart with values sorted from lowest to highest'
+    ],
+    answer: 1,
+    explanation: 'Histogram: shows frequency distribution for continuous data (bin size matters). Box plot: shows median, Q1/Q3, whiskers (1.5×IQR), and outlier points — good for comparing distributions across groups. Violin plot: combines box plot with KDE for full shape. KDE (kernel density estimate): smoothed histogram. Choose based on whether you need summary statistics or full shape.',
+  },
+];
+
+const SQL_REFERENCE = [
+  {
+    title: 'Window Functions',
+    desc: 'Calculations across rows without collapsing them.',
+    code: `SELECT name, dept, salary,
+  AVG(salary) OVER (PARTITION BY dept) AS dept_avg,
+  RANK() OVER (ORDER BY salary DESC)   AS salary_rank,
+  LAG(salary) OVER (ORDER BY hire_date) AS prev_salary
+FROM employees;`
+  },
+  {
+    title: 'CTE (WITH clause)',
+    desc: 'Named temporary result set for readability.',
+    code: `WITH monthly_revenue AS (
+  SELECT DATE_TRUNC('month', order_date) AS month,
+         SUM(amount) AS revenue
+  FROM orders
+  GROUP BY 1
+)
+SELECT month, revenue,
+  revenue - LAG(revenue) OVER (ORDER BY month) AS mom_change
+FROM monthly_revenue;`
+  },
+  {
+    title: 'Finding Duplicates',
+    desc: 'Identify and remove duplicate records.',
+    code: `-- Find duplicates
+SELECT email, COUNT(*) as cnt
+FROM users
+GROUP BY email
+HAVING COUNT(*) > 1;
+
+-- Keep only one record per duplicate
+DELETE FROM users
+WHERE id NOT IN (
+  SELECT MIN(id) FROM users GROUP BY email
+);`
+  },
+  {
+    title: 'Running Total',
+    desc: 'Cumulative sum using window function.',
+    code: `SELECT order_date, amount,
+  SUM(amount) OVER (
+    ORDER BY order_date
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS running_total
+FROM orders;`
+  },
+  {
+    title: 'Nth Highest Value',
+    desc: 'Get the Nth highest value robustly.',
+    code: `-- 3rd highest unique salary
+SELECT DISTINCT salary
+FROM employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 2;
+
+-- Using DENSE_RANK for ties
+SELECT salary FROM (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+  FROM employees
+) t WHERE rnk = 3;`
+  },
+  {
+    title: 'Pivot / Crosstab',
+    desc: 'Transform rows into columns.',
+    code: `-- CASE WHEN pivot
+SELECT user_id,
+  SUM(CASE WHEN product = 'A' THEN amount ELSE 0 END) AS product_a,
+  SUM(CASE WHEN product = 'B' THEN amount ELSE 0 END) AS product_b,
+  SUM(CASE WHEN product = 'C' THEN amount ELSE 0 END) AS product_c
+FROM orders
+GROUP BY user_id;`
+  },
+  {
+    title: 'Retention Query',
+    desc: 'Calculate day-N retention from events table.',
+    code: `WITH first_seen AS (
+  SELECT user_id, MIN(DATE(created_at)) AS day0
+  FROM events GROUP BY user_id
+),
+active AS (
+  SELECT DISTINCT user_id, DATE(created_at) AS day
+  FROM events
+)
+SELECT f.day0,
+  COUNT(DISTINCT f.user_id) AS cohort_size,
+  COUNT(DISTINCT a.user_id) AS day7_users,
+  ROUND(COUNT(DISTINCT a.user_id)*100.0 /
+        COUNT(DISTINCT f.user_id),1) AS day7_retention
+FROM first_seen f
+LEFT JOIN active a
+  ON f.user_id = a.user_id
+  AND a.day = f.day0 + INTERVAL '7 days'
+GROUP BY f.day0;`
+  },
+  {
+    title: 'Year-over-Year Growth',
+    desc: 'Compare metrics to the same period last year.',
+    code: `SELECT
+  DATE_TRUNC('month', order_date) AS month,
+  SUM(revenue) AS revenue,
+  LAG(SUM(revenue), 12) OVER (ORDER BY DATE_TRUNC('month', order_date)) AS revenue_ly,
+  ROUND((SUM(revenue) - LAG(SUM(revenue), 12) OVER (ORDER BY DATE_TRUNC('month', order_date))) /
+    NULLIF(LAG(SUM(revenue), 12) OVER (ORDER BY DATE_TRUNC('month', order_date)), 0) * 100, 1) AS yoy_pct
+FROM orders
+GROUP BY 1;`
+  },
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+
+const state = {
+  reviewed: JSON.parse(localStorage.getItem('da_reviewed') || '{}'),
+  quizHistory: JSON.parse(localStorage.getItem('da_quiz_history') || '[]'),
+  filter: { cat: 'all', diff: 'all', search: '' },
+  quiz: {
+    cat: 'all', count: 5, diff: 'all', timerSec: 0,
+    questions: [], current: 0, answers: [], timerInterval: null, timeLeft: 0
+  },
+  charts: { histogram: null, boxplot: null }
+};
+
+function saveReviewed() { localStorage.setItem('da_reviewed', JSON.stringify(state.reviewed)); }
+function saveHistory()  { localStorage.setItem('da_quiz_history', JSON.stringify(state.quizHistory)); }
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'progress') renderProgress();
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+// QUESTIONS
+// ════════════════════════════════════════════════════════════
+
+function catBadge(cat) {
+  return `<span class="cat-pill cat-${cat}">${CATEGORIES[cat].label}</span>`;
+}
+function diffBadge(d) {
+  return `<span class="cat-pill diff-${d}">${d}</span>`;
+}
+
+function renderQuestions() {
+  const { cat, diff, search } = state.filter;
+  let qs = QUESTIONS.filter(q => {
+    if (cat !== 'all' && q.category !== cat) return false;
+    if (diff !== 'all' && q.difficulty !== diff) return false;
+    if (search && !q.question.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  // Stats row
+  const total     = QUESTIONS.length;
+  const reviewed  = Object.keys(state.reviewed).length;
+  const remaining = total - reviewed;
+  document.getElementById('q-stats-row').innerHTML = `
+    <div class="stat-card"><div class="val">${total}</div><div class="lbl">Total Questions</div></div>
+    <div class="stat-card"><div class="val" style="color:#22c55e">${reviewed}</div><div class="lbl">Reviewed</div></div>
+    <div class="stat-card"><div class="val" style="color:#f59e0b">${remaining}</div><div class="lbl">Remaining</div></div>
+    <div class="stat-card"><div class="val">${Math.round(reviewed/total*100)}%</div><div class="lbl">Progress</div></div>
+  `;
+
+  if (qs.length === 0) {
+    document.getElementById('q-list').innerHTML = `<div class="empty-state"><div class="big">🔍</div><p>No questions match your filters.</p></div>`;
+    return;
+  }
+
+  document.getElementById('q-list').innerHTML = qs.map((q, i) => `
+    <div class="card ${state.reviewed[q.id] ? 'reviewed' : ''}" id="qcard-${q.id}">
+      <div class="q-header">
+        <span class="q-num">#${q.id}</span>
+        <div class="q-text">${q.question}</div>
+      </div>
+      <div class="q-meta">${catBadge(q.category)}${diffBadge(q.difficulty)}</div>
+      <div class="q-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleAnswer(${q.id})">Show Answer</button>
+        <button class="btn btn-green btn-sm ${state.reviewed[q.id] ? 'done' : ''}" onclick="markReviewed(${q.id})">
+          ${state.reviewed[q.id] ? '✓ Reviewed' : 'Mark Reviewed'}
+        </button>
+      </div>
+      <div class="q-answer" id="qa-${q.id}">
+        <p><strong style="color:var(--text)">Answer:</strong> ${q.options[q.answer]}</p>
+        <p>${q.explanation}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAnswer(id) {
+  const el = document.getElementById(`qa-${id}`);
+  const isOpen = el.classList.contains('open');
+  el.classList.toggle('open');
+  const btn = el.previousElementSibling.querySelector('.btn-ghost');
+  btn.textContent = isOpen ? 'Show Answer' : 'Hide Answer';
+}
+
+function markReviewed(id) {
+  if (state.reviewed[id]) {
+    delete state.reviewed[id];
+  } else {
+    state.reviewed[id] = true;
+  }
+  saveReviewed();
+  renderQuestions();
+}
+
+// Filter bar
+document.querySelectorAll('[data-cat]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.filter.cat = btn.dataset.cat;
+    renderQuestions();
+  });
+});
+
+document.getElementById('diff-filter').addEventListener('change', e => {
+  state.filter.diff = e.target.value;
+  renderQuestions();
+});
+
+document.getElementById('q-search').addEventListener('input', e => {
+  state.filter.search = e.target.value;
+  renderQuestions();
+});
+
+document.getElementById('reset-progress-btn').addEventListener('click', () => {
+  if (confirm('Reset all reviewed progress?')) {
+    state.reviewed = {};
+    saveReviewed();
+    renderQuestions();
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// QUIZ
+// ════════════════════════════════════════════════════════════
+
+function setupOptGroup(containerId, stateKey) {
+  document.querySelectorAll(`#${containerId} .opt-btn`).forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll(`#${containerId} .opt-btn`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      state.quiz[stateKey] = isNaN(btn.dataset.val) ? btn.dataset.val : Number(btn.dataset.val);
+    });
+  });
+}
+setupOptGroup('quiz-cat-opts',   'cat');
+setupOptGroup('quiz-count-opts', 'count');
+setupOptGroup('quiz-diff-opts',  'diff');
+setupOptGroup('quiz-timer-opts', 'timerSec');
+
+document.getElementById('start-quiz-btn').addEventListener('click', startQuiz);
+document.getElementById('quiz-next-btn').addEventListener('click', nextQuestion);
+document.getElementById('quiz-skip-btn').addEventListener('click', skipQuestion);
+document.getElementById('new-quiz-btn').addEventListener('click',  () => {
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-setup').style.display   = 'block';
+});
+document.getElementById('review-quiz-btn').addEventListener('click', reviewQuiz);
+
+function startQuiz() {
+  let pool = QUESTIONS.filter(q => {
+    if (state.quiz.cat  !== 'all' && q.category   !== state.quiz.cat)  return false;
+    if (state.quiz.diff !== 'all' && q.difficulty  !== state.quiz.diff) return false;
+    return true;
+  });
+  if (pool.length === 0) { alert('No questions match these filters.'); return; }
+  pool = shuffle(pool).slice(0, state.quiz.count);
+  state.quiz.questions = pool;
+  state.quiz.current   = 0;
+  state.quiz.answers   = [];
+
+  document.getElementById('quiz-setup').style.display   = 'none';
+  document.getElementById('quiz-results').style.display = 'none';
+  document.getElementById('quiz-active').style.display  = 'block';
+  showQuestion();
+}
+
+function showQuestion() {
+  clearInterval(state.quiz.timerInterval);
+  const q   = state.quiz.questions[state.quiz.current];
+  const tot = state.quiz.questions.length;
+  const idx = state.quiz.current;
+
+  document.getElementById('quiz-q-num').textContent    = `Question ${idx + 1} of ${tot}`;
+  document.getElementById('quiz-prog-fill').style.width = `${(idx / tot) * 100}%`;
+  document.getElementById('quiz-q-text').textContent    = q.question;
+  document.getElementById('quiz-cat-badge').innerHTML   = catBadge(q.category) + ' ' + diffBadge(q.difficulty);
+  document.getElementById('quiz-explanation').classList.remove('show');
+  document.getElementById('quiz-next-btn').disabled     = true;
+  document.getElementById('quiz-skip-btn').disabled     = false;
+
+  const optsCont = document.getElementById('quiz-options');
+  optsCont.innerHTML = q.options.map((opt, i) =>
+    `<button class="quiz-option" data-idx="${i}" onclick="selectOption(${i})">${opt}</button>`
+  ).join('');
+
+  if (state.quiz.timerSec > 0) {
+    state.quiz.timeLeft = state.quiz.timerSec;
+    updateTimerDisplay();
+    state.quiz.timerInterval = setInterval(() => {
+      state.quiz.timeLeft--;
+      updateTimerDisplay();
+      if (state.quiz.timeLeft <= 0) { clearInterval(state.quiz.timerInterval); autoSkip(); }
+    }, 1000);
+  } else {
+    document.getElementById('quiz-timer-display').textContent = '';
+  }
+}
+
+function updateTimerDisplay() {
+  const t = document.getElementById('quiz-timer-display');
+  t.textContent = state.quiz.timeLeft + 's';
+  t.style.color = state.quiz.timeLeft <= 10 ? '#ef4444' : 'var(--accent)';
+}
+
+function selectOption(idx) {
+  if (document.querySelector('.quiz-option.correct') || document.querySelector('.quiz-option.wrong')) return;
+  clearInterval(state.quiz.timerInterval);
+  const q = state.quiz.questions[state.quiz.current];
+  state.quiz.answers[state.quiz.current] = idx;
+
+  document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.add('disabled'));
+  document.querySelectorAll('.quiz-option')[q.answer].classList.add('correct');
+  if (idx !== q.answer) document.querySelectorAll('.quiz-option')[idx].classList.add('wrong');
+
+  const expl = document.getElementById('quiz-explanation');
+  expl.innerHTML = `<strong>${idx === q.answer ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${q.explanation}`;
+  expl.classList.add('show');
+  document.getElementById('quiz-next-btn').disabled = false;
+  document.getElementById('quiz-skip-btn').disabled = true;
+}
+
+function autoSkip() {
+  state.quiz.answers[state.quiz.current] = -1;
+  document.querySelectorAll('.quiz-option').forEach(btn => btn.classList.add('disabled'));
+  const q = state.quiz.questions[state.quiz.current];
+  document.querySelectorAll('.quiz-option')[q.answer].classList.add('correct');
+  const expl = document.getElementById('quiz-explanation');
+  expl.innerHTML = `<strong>⏰ Time's up!</strong> ${q.explanation}`;
+  expl.classList.add('show');
+  document.getElementById('quiz-next-btn').disabled = false;
+  document.getElementById('quiz-skip-btn').disabled = true;
+}
+
+function skipQuestion() {
+  state.quiz.answers[state.quiz.current] = -1;
+  nextQuestion();
+}
+
+function nextQuestion() {
+  state.quiz.current++;
+  if (state.quiz.current >= state.quiz.questions.length) {
+    endQuiz();
+  } else {
+    showQuestion();
+  }
+}
+
+function endQuiz() {
+  clearInterval(state.quiz.timerInterval);
+  document.getElementById('quiz-active').style.display  = 'none';
+  document.getElementById('quiz-results').style.display = 'block';
+
+  const qs      = state.quiz.questions;
+  const answers = state.quiz.answers;
+  const correct = qs.filter((q, i) => answers[i] === q.answer).length;
+  const total   = qs.length;
+  const pct     = Math.round(correct / total * 100);
+
+  document.getElementById('result-score').textContent = `${correct}/${total}`;
+
+  const grades = [
+    { min: 90, label: '🏆 Excellent!',    sub: 'You\'re well prepared.' },
+    { min: 75, label: '👍 Good job!',     sub: 'Review the ones you missed.' },
+    { min: 60, label: '📚 Keep studying', sub: 'Focus on the categories you missed.' },
+    { min: 0,  label: '💪 Keep going!',   sub: 'Review the Q&A section and try again.' },
+  ];
+  const grade = grades.find(g => pct >= g.min);
+  document.getElementById('result-grade').textContent = grade.label;
+  document.getElementById('result-sub').textContent   = `${pct}% — ${grade.sub}`;
+
+  // Category breakdown
+  const catStats = {};
+  qs.forEach((q, i) => {
+    if (!catStats[q.category]) catStats[q.category] = { correct: 0, total: 0 };
+    catStats[q.category].total++;
+    if (answers[i] === q.answer) catStats[q.category].correct++;
+  });
+  document.getElementById('result-bars').innerHTML = Object.entries(catStats).map(([cat, s]) => {
+    const p = Math.round(s.correct / s.total * 100);
+    return `<div class="result-bar-row">
+      <span style="width:90px;color:${CATEGORIES[cat].color}">${CATEGORIES[cat].label}</span>
+      <div class="result-bar-track"><div class="result-bar-fill" style="width:${p}%;background:${CATEGORIES[cat].color}"></div></div>
+      <span style="width:45px;text-align:right">${s.correct}/${s.total}</span>
+    </div>`;
+  }).join('');
+
+  // Save history
+  state.quizHistory.unshift({ date: new Date().toLocaleDateString(), correct, total, pct, cat: state.quiz.cat });
+  if (state.quizHistory.length > 20) state.quizHistory.pop();
+  saveHistory();
+}
+
+function reviewQuiz() {
+  // Switch to questions tab and show only quizzed questions
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector('[data-tab="questions"]').classList.add('active');
+  document.getElementById('questions').classList.add('active');
+
+  const ids = new Set(state.quiz.questions.map(q => q.id));
+  state.filter = { cat: 'all', diff: 'all', search: '' };
+  // Show all and auto-open answers for quizzed questions
+  renderQuestions();
+  state.quiz.questions.forEach(q => {
+    const el = document.getElementById(`qa-${q.id}`);
+    if (el) el.classList.add('open');
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// STATS LAB
+// ════════════════════════════════════════════════════════════
+
+const SAMPLE_DATA = '23, 45, 67, 12, 89, 34, 56, 78, 90, 11, 43, 65, 87, 32, 54, 76, 98, 21, 43, 65, 100, 15, 28, 72, 88, 50, 61, 33, 77, 19';
+
+document.getElementById('lab-sample-btn').addEventListener('click', () => {
+  document.getElementById('lab-input').value = SAMPLE_DATA;
+});
+document.getElementById('lab-clear-btn').addEventListener('click', () => {
+  document.getElementById('lab-input').value = '';
+  document.getElementById('lab-results').style.display = 'none';
+  if (state.charts.histogram) { state.charts.histogram.destroy(); state.charts.histogram = null; }
+  if (state.charts.boxplot)   { state.charts.boxplot.destroy();   state.charts.boxplot   = null; }
+});
+document.getElementById('lab-compute-btn').addEventListener('click', computeStats);
+document.getElementById('lab-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) computeStats();
+});
+
+function parseData(raw) {
+  return raw.split(/[\n,\s]+/).map(Number).filter(n => !isNaN(n) && raw.trim() !== '');
+}
+
+function computeStats() {
+  const raw  = document.getElementById('lab-input').value;
+  const data = parseData(raw);
+  if (data.length < 2) { alert('Enter at least 2 numbers.'); return; }
+
+  const sorted = [...data].sort((a, b) => a - b);
+  const n      = data.length;
+  const sum    = data.reduce((a, b) => a + b, 0);
+  const mean   = sum / n;
+  const median = n % 2 === 0 ? (sorted[n/2-1] + sorted[n/2]) / 2 : sorted[Math.floor(n/2)];
+
+  const freq = {};
+  data.forEach(v => freq[v] = (freq[v] || 0) + 1);
+  const maxFreq = Math.max(...Object.values(freq));
+  const modes   = Object.keys(freq).filter(k => freq[k] === maxFreq).map(Number);
+
+  const variance = data.reduce((a, v) => a + (v - mean) ** 2, 0) / n;
+  const stddev   = Math.sqrt(variance);
+  const sStddev  = Math.sqrt(data.reduce((a, v) => a + (v - mean) ** 2, 0) / (n - 1));
+
+  const q1  = percentile(sorted, 25);
+  const q3  = percentile(sorted, 75);
+  const iqr = q3 - q1;
+
+  const skew = data.reduce((a, v) => a + ((v - mean) / stddev) ** 3, 0) / n;
+  const cv   = (stddev / mean * 100);
+
+  const outlierLow  = q1 - 1.5 * iqr;
+  const outlierHigh = q3 + 1.5 * iqr;
+  const outliers    = data.filter(v => v < outlierLow || v > outlierHigh);
+
+  document.getElementById('lab-results').style.display = 'block';
+  document.getElementById('lab-stats-grid').innerHTML = [
+    ['Count (n)',   n],
+    ['Min',        fmt(sorted[0])],
+    ['Max',        fmt(sorted[n-1])],
+    ['Range',      fmt(sorted[n-1] - sorted[0])],
+    ['Mean',       fmt(mean)],
+    ['Median',     fmt(median)],
+    ['Mode',       modes.length === n ? 'None' : modes.map(fmt).join(', ')],
+    ['Std Dev (σ)',fmt(stddev)],
+    ['Std Dev (s)',fmt(sStddev)],
+    ['Variance',   fmt(variance)],
+    ['Q1 (25%)',   fmt(q1)],
+    ['Q3 (75%)',   fmt(q3)],
+    ['IQR',        fmt(iqr)],
+    ['Skewness',   fmt(skew) + (Math.abs(skew) < 0.5 ? ' (symmetric)' : skew > 0 ? ' (right)' : ' (left)')],
+    ['CV',         fmt(cv) + '%'],
+    ['Outliers',   outliers.length === 0 ? 'None' : outliers.map(fmt).join(', ')],
+  ].map(([l, v]) => `<div class="stat-item"><span class="s-lbl">${l}</span><span class="s-val">${v}</span></div>`).join('');
+
+  drawHistogram(sorted);
+  drawBoxplot(sorted, q1, median, q3, iqr);
+}
+
+function percentile(sorted, p) {
+  const idx = (p / 100) * (sorted.length - 1);
+  const lo  = Math.floor(idx);
+  const hi  = Math.ceil(idx);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+function fmt(n) { return typeof n === 'number' ? (Number.isInteger(n) ? n : n.toFixed(2)) : n; }
+
+function drawHistogram(sorted) {
+  const canvas = document.getElementById('histogram-chart');
+  if (state.charts.histogram) state.charts.histogram.destroy();
+
+  const bins = 10;
+  const min  = sorted[0], max = sorted[sorted.length - 1];
+  const binW = (max - min) / bins || 1;
+  const counts = Array(bins).fill(0);
+  sorted.forEach(v => {
+    const i = Math.min(Math.floor((v - min) / binW), bins - 1);
+    counts[i]++;
+  });
+  const labels = counts.map((_, i) => fmt(min + i * binW));
+
+  state.charts.histogram = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data: counts, backgroundColor: 'rgba(99,102,241,0.7)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7280' }, grid: { color: '#2a2a50' } },
+        y: { ticks: { color: '#6b7280' }, grid: { color: '#2a2a50' } }
+      }
+    }
+  });
+}
+
+function drawBoxplot(sorted, q1, median, q3, iqr) {
+  const canvas = document.getElementById('boxplot-chart');
+  if (state.charts.boxplot) state.charts.boxplot.destroy();
+
+  const min = sorted[0], max = sorted[sorted.length - 1];
+  const lf  = Math.max(min, q1 - 1.5 * iqr);
+  const uf  = Math.min(max, q3 + 1.5 * iqr);
+
+  state.charts.boxplot = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: [''],
+      datasets: [
+        { label: 'Min→Q1',    data: [[lf, q1]],     backgroundColor: 'transparent', borderColor: '#6366f1', borderWidth: 2 },
+        { label: 'IQR Box',   data: [[q1, q3]],     backgroundColor: 'rgba(99,102,241,0.4)', borderColor: '#6366f1', borderWidth: 2 },
+        { label: 'Q3→Max',    data: [[q3, uf]],     backgroundColor: 'transparent', borderColor: '#6366f1', borderWidth: 2 },
+        { label: 'Median',    data: [[median - (max-min)*0.005, median + (max-min)*0.005]], backgroundColor: '#a5f3fc', borderColor: '#a5f3fc', borderWidth: 1 },
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: true, labels: { color: '#6b7280', boxWidth: 12, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const [lo, hi] = ctx.raw;
+              return `${ctx.dataset.label}: ${fmt(lo)} – ${fmt(hi)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#6b7280' }, grid: { color: '#2a2a50' } },
+        y: { display: false }
+      }
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// SQL REFERENCE
+// ════════════════════════════════════════════════════════════
+
+document.getElementById('sql-ref-grid').innerHTML = SQL_REFERENCE.map(r => `
+  <div class="ref-card">
+    <h3>${r.title}</h3>
+    <p>${r.desc}</p>
+    <code>${r.code}</code>
+  </div>
+`).join('');
+
+// ════════════════════════════════════════════════════════════
+// PROGRESS
+// ════════════════════════════════════════════════════════════
+
+function renderProgress() {
+  // Per-category reviewed
+  const catCounts = {};
+  QUESTIONS.forEach(q => {
+    if (!catCounts[q.category]) catCounts[q.category] = { total: 0, reviewed: 0 };
+    catCounts[q.category].total++;
+    if (state.reviewed[q.id]) catCounts[q.category].reviewed++;
+  });
+
+  document.getElementById('progress-cats').innerHTML = Object.entries(catCounts).map(([cat, s]) => {
+    const pct = Math.round(s.reviewed / s.total * 100);
+    return `<div class="progress-cat">
+      <h3>
+        <span style="color:${CATEGORIES[cat].color}">${CATEGORIES[cat].label}</span>
+        <span style="font-size:12px;color:var(--muted)">${s.reviewed}/${s.total}</span>
+      </h3>
+      <div class="pbar-track"><div class="pbar-fill" style="width:${pct}%;background:${CATEGORIES[cat].color}"></div></div>
+      <div class="pbar-meta">${pct}% reviewed</div>
+    </div>`;
+  }).join('');
+
+  // Quiz history
+  const hist = state.quizHistory;
+  const histEl = document.getElementById('quiz-history-list');
+  if (hist.length === 0) {
+    histEl.innerHTML = `<div class="empty-state"><div class="big">🧠</div><p>No quizzes taken yet. Try the Quiz tab!</p></div>`;
+    return;
+  }
+  histEl.innerHTML = hist.slice(0, 10).map(h => {
+    const cls = h.pct >= 80 ? 'score-good' : h.pct >= 60 ? 'score-ok' : 'score-bad';
+    const catLabel = h.cat === 'all' ? 'All categories' : CATEGORIES[h.cat]?.label ?? h.cat;
+    return `<div class="history-row">
+      <div>
+        <div>${catLabel}</div>
+        <div style="font-size:11px;color:var(--muted)">${h.date}</div>
+      </div>
+      <div class="history-score ${cls}">${h.correct}/${h.total} (${h.pct}%)</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════════
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+
+renderQuestions();
+</script>
+</body>
+</html>
