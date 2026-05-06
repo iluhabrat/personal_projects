@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日本語 — Japanese Learning</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0c0c1d;
+      --surface: #13132b;
+      --border: #1e1e3a;
+      --text: #e2e8f0;
+      --muted: #475569;
+      --accent: #e74c8b;
+      --accent2: #4ade80;
+      --accent3: #60a5fa;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 24px;
+      height: 56px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 20px; font-weight: 800; color: var(--accent); margin-right: 16px; white-space: nowrap; }
+    .logo span { color: var(--text); }
+    nav button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    nav button:hover { background: var(--border); color: var(--text); }
+    nav button.active { background: var(--accent); color: #fff; }
+    .streak-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #f59e0b;
+    }
+
+    /* PAGES */
+    .page { display: none; padding: 32px 24px; max-width: 960px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    h2 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+    .section-sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+    /* KANA CHART */
+    .kana-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .kana-tab {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .kana-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(231,76,139,0.1); }
+
+    .kana-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 8px;
+    }
+    .kana-cell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .kana-cell:hover { border-color: var(--accent); transform: scale(1.06); }
+    .kana-cell.learned { border-color: var(--accent2); background: rgba(74,222,128,0.08); }
+    .kana-char { font-size: 26px; line-height: 1; }
+    .kana-rom { font-size: 11px; color: var(--muted); margin-top: 4px; font-weight: 600; }
+    .kana-section-label {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 0 2px;
+    }
+
+    /* FLASHCARDS */
+    .flashcard-controls { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+    .flashcard-controls select, .flashcard-controls button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .flashcard-controls select option { background: var(--surface); }
+
+    .flashcard-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .card-counter { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+    .card-scene {
+      width: 300px;
+      height: 200px;
+      perspective: 800px;
+      cursor: pointer;
+    }
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s cubic-bezier(.4,0,.2,1);
+    }
+    .card-inner.flipped { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border: 2px solid var(--border);
+      background: var(--surface);
+    }
+    .card-face.back { transform: rotateY(180deg); border-color: var(--accent); }
+    .card-jp { font-size: 52px; line-height: 1; }
+    .card-hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .card-answer { font-size: 22px; font-weight: 700; }
+    .card-answer-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .card-speak-btn {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(231,76,139,0.15);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+
+    .card-nav { display: flex; gap: 12px; }
+    .card-nav button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .card-nav button:hover { border-color: var(--accent); color: var(--accent); }
+    .card-nav button.mark-btn { border-color: var(--accent2); color: var(--accent2); }
+
+    /* VOCAB */
+    .vocab-cats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .vocab-cat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .vocab-cat.active { border-color: var(--accent3); color: var(--accent3); background: rgba(96,165,250,0.1); }
+
+    .vocab-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .vocab-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .vocab-card:hover { border-color: var(--accent3); transform: translateY(-2px); }
+    .vocab-jp { font-size: 22px; font-weight: 700; }
+    .vocab-rom { font-size: 12px; color: var(--accent); margin: 3px 0; font-weight: 600; }
+    .vocab-en { font-size: 12px; color: var(--muted); }
+    .vocab-speak {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      opacity: 0.5;
+    }
+    .vocab-speak:hover { opacity: 1; }
+
+    /* PHRASES */
+    .phrase-list { display: flex; flex-direction: column; gap: 10px; }
+    .phrase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .phrase-jp { font-size: 20px; font-weight: 700; min-width: 180px; }
+    .phrase-info { flex: 1; }
+    .phrase-rom { font-size: 13px; color: var(--accent); font-weight: 600; }
+    .phrase-en { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .phrase-speak { background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.6; }
+    .phrase-speak:hover { opacity: 1; }
+
+    /* QUIZ */
+    .quiz-setup { display: flex; flex-direction: column; gap: 16px; max-width: 480px; }
+    .quiz-setup label { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block; }
+    .quiz-setup select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 10px 16px;
+      font-size: 14px;
+      width: 100%;
+    }
+    .quiz-start-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      padding: 12px 32px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      width: fit-content;
+    }
+    .quiz-start-btn:hover { opacity: 0.85; }
+
+    .quiz-play { display: none; }
+    .quiz-play.active { display: block; }
+    .quiz-setup-panel { display: block; }
+    .quiz-setup-panel.hidden { display: none; }
+
+    .quiz-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .quiz-progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .quiz-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+    .quiz-score { font-size: 14px; font-weight: 700; color: var(--accent2); }
+
+    .quiz-question { font-size: 40px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+    .quiz-question-sub { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .quiz-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 0 auto 20px; }
+    .quiz-choice {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .quiz-choice:hover:not(.disabled) { border-color: var(--accent3); color: var(--accent3); }
+    .quiz-choice.correct { border-color: var(--accent2) !important; background: rgba(74,222,128,0.15) !important; color: var(--accent2) !important; }
+    .quiz-choice.wrong { border-color: #ef4444 !important; background: rgba(239,68,68,0.1) !important; color: #ef4444 !important; }
+    .quiz-choice.disabled { cursor: default; }
+    .quiz-feedback { text-align: center; font-size: 14px; font-weight: 600; min-height: 20px; }
+    .quiz-next-btn {
+      display: block;
+      margin: 20px auto 0;
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      padding: 12px 40px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .quiz-next-btn.visible { opacity: 1; pointer-events: all; }
+
+    .quiz-result {
+      display: none;
+      text-align: center;
+      padding: 40px 0;
+    }
+    .quiz-result.active { display: block; }
+    .result-score { font-size: 64px; font-weight: 900; color: var(--accent); }
+    .result-label { font-size: 18px; color: var(--muted); margin-bottom: 24px; }
+    .result-msg { font-size: 22px; font-weight: 700; margin-bottom: 32px; }
+    .result-restart {
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      padding: 12px 40px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* PROGRESS */
+    .progress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .stat-num { font-size: 36px; font-weight: 900; color: var(--accent); }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .progress-bar-row { margin-top: 24px; }
+    .progress-bar-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .pbar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+    .pbar-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+    .reset-btn {
+      background: none;
+      border: 1px solid #ef4444;
+      border-radius: 10px;
+      color: #ef4444;
+      padding: 8px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 32px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1e1e3a;
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform 0.3s;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 600px) {
+      .quiz-choices { grid-template-columns: 1fr; }
+      .phrase-jp { min-width: 120px; font-size: 17px; }
+      nav { gap: 4px; padding: 0 12px; }
+      nav button { padding: 5px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">日本語 <span>Learn</span></div>
+  <button class="active" onclick="showPage('kana')">Kana</button>
+  <button onclick="showPage('flashcards')">Flashcards</button>
+  <button onclick="showPage('vocab')">Vocab</button>
+  <button onclick="showPage('phrases')">Phrases</button>
+  <button onclick="showPage('quiz')">Quiz</button>
+  <button onclick="showPage('progress')">Progress</button>
+  <div class="streak-badge" id="streakBadge">🔥 0</div>
+</nav>
+
+<!-- KANA -->
+<div class="page active" id="page-kana">
+  <h2>Kana Charts</h2>
+  <p class="section-sub">Click any character to hear its pronunciation. Green = marked as learned.</p>
+  <div class="kana-tabs">
+    <div class="kana-tab active" onclick="showKana('hiragana',this)">Hiragana ひ</div>
+    <div class="kana-tab" onclick="showKana('katakana',this)">Katakana カ</div>
+  </div>
+  <div class="kana-grid" id="kanaGrid"></div>
+</div>
+
+<!-- FLASHCARDS -->
+<div class="page" id="page-flashcards">
+  <h2>Flashcards</h2>
+  <p class="section-sub">Click the card to reveal the answer. Use arrow keys to navigate.</p>
+  <div class="flashcard-controls">
+    <select id="deckSelect" onchange="loadDeck()">
+      <option value="hiragana">Hiragana</option>
+      <option value="katakana">Katakana</option>
+      <option value="vocab-greetings">Vocab: Greetings</option>
+      <option value="vocab-numbers">Vocab: Numbers</option>
+      <option value="vocab-colors">Vocab: Colors</option>
+      <option value="vocab-food">Vocab: Food</option>
+      <option value="vocab-days">Vocab: Days</option>
+      <option value="vocab-verbs">Vocab: Verbs</option>
+    </select>
+    <button onclick="shuffleDeck()">🔀 Shuffle</button>
+    <button onclick="learnedOnly()">✅ Unlearned only</button>
+  </div>
+  <div class="flashcard-area">
+    <div class="card-counter" id="cardCounter">1 / 1</div>
+    <div class="card-scene" onclick="flipCard()">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face front">
+          <div class="card-jp" id="cardFront">あ</div>
+          <div class="card-hint">tap to reveal</div>
+          <button class="card-speak-btn" onclick="event.stopPropagation();speakCard()">🔊</button>
+        </div>
+        <div class="card-face back">
+          <div class="card-answer" id="cardBack">a</div>
+          <div class="card-answer-sub" id="cardBackSub"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button onclick="prevCard()">← Prev</button>
+      <button class="mark-btn" onclick="markLearned()">✓ Mark learned</button>
+      <button onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VOCAB -->
+<div class="page" id="page-vocab">
+  <h2>Vocabulary</h2>
+  <p class="section-sub">Click a card to hear pronunciation.</p>
+  <div class="vocab-cats" id="vocabCats"></div>
+  <div class="vocab-list" id="vocabList"></div>
+</div>
+
+<!-- PHRASES -->
+<div class="page" id="page-phrases">
+  <h2>Common Phrases</h2>
+  <p class="section-sub">Essential phrases for everyday conversations.</p>
+  <div class="phrase-list" id="phraseList"></div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="page-quiz">
+  <h2>Quiz</h2>
+  <p class="section-sub">Test your knowledge. Choose your deck and direction.</p>
+
+  <div class="quiz-setup-panel" id="quizSetup">
+    <div class="quiz-setup">
+      <div>
+        <label>Deck</label>
+        <select id="quizDeck">
+          <option value="hiragana">Hiragana</option>
+          <option value="katakana">Katakana</option>
+          <option value="vocab-greetings">Vocab: Greetings</option>
+          <option value="vocab-numbers">Vocab: Numbers</option>
+          <option value="vocab-colors">Vocab: Colors</option>
+          <option value="vocab-food">Vocab: Food</option>
+          <option value="vocab-days">Vocab: Days</option>
+          <option value="vocab-verbs">Vocab: Verbs</option>
+          <option value="all-vocab">All Vocabulary</option>
+        </select>
+      </div>
+      <div>
+        <label>Question type</label>
+        <select id="quizType">
+          <option value="jp2rom">Japanese → Romaji</option>
+          <option value="jp2en">Japanese → English</option>
+          <option value="rom2jp">Romaji → Japanese</option>
+          <option value="en2jp">English → Japanese</option>
+        </select>
+      </div>
+      <div>
+        <label>Number of questions</label>
+        <select id="quizCount">
+          <option value="10">10</option>
+          <option value="20" selected>20</option>
+          <option value="30">30</option>
+        </select>
+      </div>
+      <button class="quiz-start-btn" onclick="startQuiz()">Start Quiz</button>
+    </div>
+  </div>
+
+  <div class="quiz-play" id="quizPlay">
+    <div class="quiz-header">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizFill" style="width:0%"></div></div>
+      <div class="quiz-score" id="quizScore">0/0</div>
+    </div>
+    <div class="quiz-question" id="quizQ"></div>
+    <div class="quiz-question-sub" id="quizQSub"></div>
+    <div class="quiz-choices" id="quizChoices"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+    <button class="quiz-next-btn" id="quizNextBtn" onclick="nextQuestion()">Next →</button>
+  </div>
+
+  <div class="quiz-result" id="quizResult">
+    <div class="result-score" id="resultScore">0%</div>
+    <div class="result-label" id="resultLabel">0 / 0 correct</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <button class="result-restart" onclick="restartQuiz()">Try Again</button>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="page" id="page-progress">
+  <h2>Your Progress</h2>
+  <p class="section-sub">Track your learning journey.</p>
+  <div class="progress-grid" id="progressGrid"></div>
+  <div class="progress-bar-row" id="progressBars"></div>
+  <button class="reset-btn" onclick="resetProgress()">Reset All Progress</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const HIRAGANA = [
+  { g:'Vowels', chars:[
+    {c:'あ',r:'a'},{c:'い',r:'i'},{c:'う',r:'u'},{c:'え',r:'e'},{c:'お',r:'o'},
+  ]},
+  { g:'K', chars:[
+    {c:'か',r:'ka'},{c:'き',r:'ki'},{c:'く',r:'ku'},{c:'け',r:'ke'},{c:'こ',r:'ko'},
+  ]},
+  { g:'S', chars:[
+    {c:'さ',r:'sa'},{c:'し',r:'shi'},{c:'す',r:'su'},{c:'せ',r:'se'},{c:'そ',r:'so'},
+  ]},
+  { g:'T', chars:[
+    {c:'た',r:'ta'},{c:'ち',r:'chi'},{c:'つ',r:'tsu'},{c:'て',r:'te'},{c:'と',r:'to'},
+  ]},
+  { g:'N', chars:[
+    {c:'な',r:'na'},{c:'に',r:'ni'},{c:'ぬ',r:'nu'},{c:'ね',r:'ne'},{c:'の',r:'no'},
+  ]},
+  { g:'H', chars:[
+    {c:'は',r:'ha'},{c:'ひ',r:'hi'},{c:'ふ',r:'fu'},{c:'へ',r:'he'},{c:'ほ',r:'ho'},
+  ]},
+  { g:'M', chars:[
+    {c:'ま',r:'ma'},{c:'み',r:'mi'},{c:'む',r:'mu'},{c:'め',r:'me'},{c:'も',r:'mo'},
+  ]},
+  { g:'Y', chars:[
+    {c:'や',r:'ya'},{c:'ゆ',r:'yu'},{c:'よ',r:'yo'},
+  ]},
+  { g:'R', chars:[
+    {c:'ら',r:'ra'},{c:'り',r:'ri'},{c:'る',r:'ru'},{c:'れ',r:'re'},{c:'ろ',r:'ro'},
+  ]},
+  { g:'W', chars:[
+    {c:'わ',r:'wa'},{c:'を',r:'wo'},
+  ]},
+  { g:'N', chars:[
+    {c:'ん',r:'n'},
+  ]},
+  { g:'G (Dakuten)', chars:[
+    {c:'が',r:'ga'},{c:'ぎ',r:'gi'},{c:'ぐ',r:'gu'},{c:'げ',r:'ge'},{c:'ご',r:'go'},
+  ]},
+  { g:'Z', chars:[
+    {c:'ざ',r:'za'},{c:'じ',r:'ji'},{c:'ず',r:'zu'},{c:'ぜ',r:'ze'},{c:'ぞ',r:'zo'},
+  ]},
+  { g:'D', chars:[
+    {c:'だ',r:'da'},{c:'ぢ',r:'ji'},{c:'づ',r:'zu'},{c:'で',r:'de'},{c:'ど',r:'do'},
+  ]},
+  { g:'B', chars:[
+    {c:'ば',r:'ba'},{c:'び',r:'bi'},{c:'ぶ',r:'bu'},{c:'べ',r:'be'},{c:'ぼ',r:'bo'},
+  ]},
+  { g:'P (Handakuten)', chars:[
+    {c:'ぱ',r:'pa'},{c:'ぴ',r:'pi'},{c:'ぷ',r:'pu'},{c:'ぺ',r:'pe'},{c:'ぽ',r:'po'},
+  ]},
+];
+
+const KATAKANA = [
+  { g:'Vowels', chars:[
+    {c:'ア',r:'a'},{c:'イ',r:'i'},{c:'ウ',r:'u'},{c:'エ',r:'e'},{c:'オ',r:'o'},
+  ]},
+  { g:'K', chars:[
+    {c:'カ',r:'ka'},{c:'キ',r:'ki'},{c:'ク',r:'ku'},{c:'ケ',r:'ke'},{c:'コ',r:'ko'},
+  ]},
+  { g:'S', chars:[
+    {c:'サ',r:'sa'},{c:'シ',r:'shi'},{c:'ス',r:'su'},{c:'セ',r:'se'},{c:'ソ',r:'so'},
+  ]},
+  { g:'T', chars:[
+    {c:'タ',r:'ta'},{c:'チ',r:'chi'},{c:'ツ',r:'tsu'},{c:'テ',r:'te'},{c:'ト',r:'to'},
+  ]},
+  { g:'N', chars:[
+    {c:'ナ',r:'na'},{c:'ニ',r:'ni'},{c:'ヌ',r:'nu'},{c:'ネ',r:'ne'},{c:'ノ',r:'no'},
+  ]},
+  { g:'H', chars:[
+    {c:'ハ',r:'ha'},{c:'ヒ',r:'hi'},{c:'フ',r:'fu'},{c:'ヘ',r:'he'},{c:'ホ',r:'ho'},
+  ]},
+  { g:'M', chars:[
+    {c:'マ',r:'ma'},{c:'ミ',r:'mi'},{c:'ム',r:'mu'},{c:'メ',r:'me'},{c:'モ',r:'mo'},
+  ]},
+  { g:'Y', chars:[
+    {c:'ヤ',r:'ya'},{c:'ユ',r:'yu'},{c:'ヨ',r:'yo'},
+  ]},
+  { g:'R', chars:[
+    {c:'ラ',r:'ra'},{c:'リ',r:'ri'},{c:'ル',r:'ru'},{c:'レ',r:'re'},{c:'ロ',r:'ro'},
+  ]},
+  { g:'W', chars:[
+    {c:'ワ',r:'wa'},{c:'ヲ',r:'wo'},
+  ]},
+  { g:'N', chars:[
+    {c:'ン',r:'n'},
+  ]},
+  { g:'G (Dakuten)', chars:[
+    {c:'ガ',r:'ga'},{c:'ギ',r:'gi'},{c:'グ',r:'gu'},{c:'ゲ',r:'ge'},{c:'ゴ',r:'go'},
+  ]},
+  { g:'Z', chars:[
+    {c:'ザ',r:'za'},{c:'ジ',r:'ji'},{c:'ズ',r:'zu'},{c:'ゼ',r:'ze'},{c:'ゾ',r:'zo'},
+  ]},
+  { g:'D', chars:[
+    {c:'ダ',r:'da'},{c:'ヂ',r:'ji'},{c:'ヅ',r:'zu'},{c:'デ',r:'de'},{c:'ド',r:'do'},
+  ]},
+  { g:'B', chars:[
+    {c:'バ',r:'ba'},{c:'ビ',r:'bi'},{c:'ブ',r:'bu'},{c:'ベ',r:'be'},{c:'ボ',r:'bo'},
+  ]},
+  { g:'P (Handakuten)', chars:[
+    {c:'パ',r:'pa'},{c:'ピ',r:'pi'},{c:'プ',r:'pu'},{c:'ペ',r:'pe'},{c:'ポ',r:'po'},
+  ]},
+];
+
+const VOCAB = {
+  greetings: [
+    {jp:'こんにちは',r:'konnichiwa',en:'Hello'},
+    {jp:'おはようございます',r:'ohayou gozaimasu',en:'Good morning'},
+    {jp:'こんばんは',r:'konbanwa',en:'Good evening'},
+    {jp:'さようなら',r:'sayounara',en:'Goodbye'},
+    {jp:'またね',r:'mata ne',en:'See you later'},
+    {jp:'はじめまして',r:'hajimemashite',en:'Nice to meet you'},
+    {jp:'ありがとう',r:'arigatou',en:'Thank you'},
+    {jp:'すみません',r:'sumimasen',en:'Excuse me / Sorry'},
+    {jp:'ごめんなさい',r:'gomen nasai',en:'I\'m sorry'},
+    {jp:'どういたしまして',r:'dou itashimashite',en:'You\'re welcome'},
+    {jp:'はい',r:'hai',en:'Yes'},
+    {jp:'いいえ',r:'iie',en:'No'},
+    {jp:'おやすみ',r:'oyasumi',en:'Good night'},
+    {jp:'いってきます',r:'ittekimasu',en:'I\'m leaving (said when going out)'},
+    {jp:'ただいま',r:'tadaima',en:'I\'m home'},
+  ],
+  numbers: [
+    {jp:'いち',r:'ichi',en:'1'},
+    {jp:'に',r:'ni',en:'2'},
+    {jp:'さん',r:'san',en:'3'},
+    {jp:'よん / し',r:'yon / shi',en:'4'},
+    {jp:'ご',r:'go',en:'5'},
+    {jp:'ろく',r:'roku',en:'6'},
+    {jp:'なな / しち',r:'nana / shichi',en:'7'},
+    {jp:'はち',r:'hachi',en:'8'},
+    {jp:'きゅう / く',r:'kyuu / ku',en:'9'},
+    {jp:'じゅう',r:'juu',en:'10'},
+    {jp:'ひゃく',r:'hyaku',en:'100'},
+    {jp:'せん',r:'sen',en:'1,000'},
+    {jp:'まん',r:'man',en:'10,000'},
+    {jp:'れい / ゼロ',r:'rei / zero',en:'0'},
+    {jp:'じゅういち',r:'juuichi',en:'11'},
+    {jp:'にじゅう',r:'nijuu',en:'20'},
+  ],
+  colors: [
+    {jp:'あか',r:'aka',en:'Red'},
+    {jp:'あお',r:'ao',en:'Blue'},
+    {jp:'きいろ',r:'kiiro',en:'Yellow'},
+    {jp:'みどり',r:'midori',en:'Green'},
+    {jp:'しろ',r:'shiro',en:'White'},
+    {jp:'くろ',r:'kuro',en:'Black'},
+    {jp:'オレンジ',r:'orenji',en:'Orange'},
+    {jp:'むらさき',r:'murasaki',en:'Purple'},
+    {jp:'ピンク',r:'pinku',en:'Pink'},
+    {jp:'ちゃいろ',r:'chairo',en:'Brown'},
+    {jp:'はいいろ',r:'haiiro',en:'Gray'},
+    {jp:'きんいろ',r:'kin\'iro',en:'Gold'},
+  ],
+  food: [
+    {jp:'すし',r:'sushi',en:'Sushi'},
+    {jp:'ラーメン',r:'ramen',en:'Ramen'},
+    {jp:'てんぷら',r:'tenpura',en:'Tempura'},
+    {jp:'おにぎり',r:'onigiri',en:'Rice ball'},
+    {jp:'やきとり',r:'yakitori',en:'Grilled chicken skewer'},
+    {jp:'みそしる',r:'miso shiru',en:'Miso soup'},
+    {jp:'うどん',r:'udon',en:'Udon noodles'},
+    {jp:'そば',r:'soba',en:'Buckwheat noodles'},
+    {jp:'とんかつ',r:'tonkatsu',en:'Pork cutlet'},
+    {jp:'たこやき',r:'takoyaki',en:'Octopus balls'},
+    {jp:'おちゃ',r:'ocha',en:'Green tea'},
+    {jp:'さかな',r:'sakana',en:'Fish'},
+    {jp:'にく',r:'niku',en:'Meat'},
+    {jp:'やさい',r:'yasai',en:'Vegetables'},
+    {jp:'ごはん',r:'gohan',en:'Rice / Meal'},
+  ],
+  days: [
+    {jp:'にちようび',r:'nichiyoubi',en:'Sunday'},
+    {jp:'げつようび',r:'getsuyoubi',en:'Monday'},
+    {jp:'かようび',r:'kayoubi',en:'Tuesday'},
+    {jp:'すいようび',r:'suiyoubi',en:'Wednesday'},
+    {jp:'もくようび',r:'mokuyoubi',en:'Thursday'},
+    {jp:'きんようび',r:'kin\'youbi',en:'Friday'},
+    {jp:'どようび',r:'doyoubi',en:'Saturday'},
+    {jp:'きょう',r:'kyou',en:'Today'},
+    {jp:'あした',r:'ashita',en:'Tomorrow'},
+    {jp:'きのう',r:'kinou',en:'Yesterday'},
+    {jp:'まいにち',r:'mainichi',en:'Every day'},
+    {jp:'らいしゅう',r:'raishuu',en:'Next week'},
+  ],
+  verbs: [
+    {jp:'たべる',r:'taberu',en:'to eat'},
+    {jp:'のむ',r:'nomu',en:'to drink'},
+    {jp:'みる',r:'miru',en:'to see / watch'},
+    {jp:'きく',r:'kiku',en:'to listen / ask'},
+    {jp:'はなす',r:'hanasu',en:'to speak'},
+    {jp:'よむ',r:'yomu',en:'to read'},
+    {jp:'かく',r:'kaku',en:'to write'},
+    {jp:'いく',r:'iku',en:'to go'},
+    {jp:'くる',r:'kuru',en:'to come'},
+    {jp:'かえる',r:'kaeru',en:'to return home'},
+    {jp:'ねる',r:'neru',en:'to sleep'},
+    {jp:'おきる',r:'okiru',en:'to wake up'},
+    {jp:'する',r:'suru',en:'to do'},
+    {jp:'わかる',r:'wakaru',en:'to understand'},
+    {jp:'おもう',r:'omou',en:'to think'},
+    {jp:'すき',r:'suki',en:'to like (adj)'},
+  ],
+};
+
+const PHRASES = [
+  {jp:'はじめまして、どうぞよろしく。',r:'Hajimemashite, douzo yoroshiku.',en:'Nice to meet you, pleased to make your acquaintance.'},
+  {jp:'おなまえはなんですか？',r:'Onamae wa nan desu ka?',en:'What is your name?'},
+  {jp:'わたしのなまえは___です。',r:'Watashi no namae wa ___ desu.',en:'My name is ___.'},
+  {jp:'にほんごがすこしわかります。',r:'Nihongo ga sukoshi wakarimasu.',en:'I understand a little Japanese.'},
+  {jp:'もうすこしゆっくりはなしてください。',r:'Mou sukoshi yukkuri hanashite kudasai.',en:'Please speak a little more slowly.'},
+  {jp:'トイレはどこですか？',r:'Toire wa doko desu ka?',en:'Where is the bathroom?'},
+  {jp:'いくらですか？',r:'Ikura desu ka?',en:'How much does it cost?'},
+  {jp:'これをください。',r:'Kore wo kudasai.',en:'Please give me this.'},
+  {jp:'メニューをください。',r:'Menyuu wo kudasai.',en:'May I have the menu please?'},
+  {jp:'おいしい！',r:'Oishii!',en:'Delicious!'},
+  {jp:'たすけてください！',r:'Tasukete kudasai!',en:'Please help me!'},
+  {jp:'えいごがはなせますか？',r:'Eigo ga hanasemasu ka?',en:'Can you speak English?'},
+  {jp:'これはなんですか？',r:'Kore wa nan desu ka?',en:'What is this?'},
+  {jp:'どこからきましたか？',r:'Doko kara kimashita ka?',en:'Where are you from?'},
+  {jp:'にほんがだいすきです。',r:'Nihon ga daisuki desu.',en:'I love Japan.'},
+  {jp:'がんばって！',r:'Ganbatte!',en:'Do your best! / Good luck!'},
+  {jp:'だいじょうぶですか？',r:'Daijoubu desu ka?',en:'Are you okay?'},
+  {jp:'わかりません。',r:'Wakarimasen.',en:'I don\'t understand.'},
+  {jp:'しりません。',r:'Shirimasen.',en:'I don\'t know.'},
+  {jp:'いただきます！',r:'Itadakimasu!',en:'Let\'s eat! (said before meals)'},
+  {jp:'ごちそうさまでした。',r:'Gochisousama deshita.',en:'Thank you for the meal.'},
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+
+let state = JSON.parse(localStorage.getItem('jp-state') || 'null') || {
+  learnedKana: {},
+  learnedVocab: {},
+  quizHistory: [],
+  streak: 0,
+  lastStudyDate: null,
+};
+
+function saveState() {
+  localStorage.setItem('jp-state', JSON.stringify(state));
+}
+
+// ─── STREAK ──────────────────────────────────────────────────────────────────
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (state.lastStudyDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  state.streak = state.lastStudyDate === yesterday ? state.streak + 1 : 1;
+  state.lastStudyDate = today;
+  saveState();
+  document.getElementById('streakBadge').textContent = '🔥 ' + state.streak;
+}
+
+function initStreak() {
+  document.getElementById('streakBadge').textContent = '🔥 ' + (state.streak || 0);
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'progress') renderProgress();
+  updateStreak();
+}
+
+// ─── SPEECH ──────────────────────────────────────────────────────────────────
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ja-JP';
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ─── KANA CHART ──────────────────────────────────────────────────────────────
+
+let currentKanaSet = 'hiragana';
+
+function showKana(set, tab) {
+  currentKanaSet = set;
+  document.querySelectorAll('.kana-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  renderKana();
+}
+
+function renderKana() {
+  const data = currentKanaSet === 'hiragana' ? HIRAGANA : KATAKANA;
+  const grid = document.getElementById('kanaGrid');
+  grid.innerHTML = '';
+  data.forEach(group => {
+    const label = document.createElement('div');
+    label.className = 'kana-section-label';
+    label.textContent = group.g;
+    grid.appendChild(label);
+    group.chars.forEach(ch => {
+      const key = currentKanaSet + ':' + ch.c;
+      const cell = document.createElement('div');
+      cell.className = 'kana-cell' + (state.learnedKana[key] ? ' learned' : '');
+      cell.innerHTML = `<div class="kana-char">${ch.c}</div><div class="kana-rom">${ch.r}</div>`;
+      cell.onclick = () => {
+        speak(ch.c);
+        state.learnedKana[key] = true;
+        saveState();
+        cell.classList.add('learned');
+        updateStreak();
+      };
+      grid.appendChild(cell);
+    });
+  });
+}
+
+// ─── FLASHCARDS ──────────────────────────────────────────────────────────────
+
+let deck = [];
+let deckIdx = 0;
+let showingBack = false;
+let filterUnlearned = false;
+
+function getAllKana(set) {
+  const data = set === 'hiragana' ? HIRAGANA : KATAKANA;
+  return data.flatMap(g => g.chars.map(ch => ({
+    jp: ch.c, r: ch.r, en: ch.r, type: 'kana', set
+  })));
+}
+
+function getVocabDeck(cat) {
+  return VOCAB[cat].map(v => ({jp: v.jp, r: v.r, en: v.en, type: 'vocab', cat}));
+}
+
+function loadDeck() {
+  filterUnlearned = false;
+  const sel = document.getElementById('deckSelect').value;
+  if (sel === 'hiragana' || sel === 'katakana') {
+    deck = getAllKana(sel);
+  } else {
+    const cat = sel.replace('vocab-', '');
+    deck = getVocabDeck(cat);
+  }
+  deckIdx = 0;
+  showCard();
+}
+
+function shuffleDeck() {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  deckIdx = 0;
+  showCard();
+  toast('Deck shuffled!');
+}
+
+function learnedOnly() {
+  filterUnlearned = !filterUnlearned;
+  const sel = document.getElementById('deckSelect').value;
+  let base;
+  if (sel === 'hiragana' || sel === 'katakana') base = getAllKana(sel);
+  else base = getVocabDeck(sel.replace('vocab-', ''));
+
+  if (filterUnlearned) {
+    deck = base.filter(card => {
+      const key = card.set ? card.set + ':' + card.jp : 'vocab:' + card.jp;
+      return !state.learnedKana[key] && !state.learnedVocab[card.jp];
+    });
+    if (deck.length === 0) { deck = base; toast('All learned! Showing full deck.'); }
+    else toast('Showing unlearned only (' + deck.length + ')');
+  } else {
+    deck = base;
+    toast('Showing full deck (' + deck.length + ')');
+  }
+  deckIdx = 0;
+  showCard();
+}
+
+function showCard() {
+  showingBack = false;
+  document.getElementById('cardInner').classList.remove('flipped');
+  if (deck.length === 0) return;
+  const card = deck[deckIdx];
+  document.getElementById('cardFront').textContent = card.jp;
+  document.getElementById('cardBack').textContent = card.r;
+  document.getElementById('cardBackSub').textContent = card.en !== card.r ? card.en : '';
+  document.getElementById('cardCounter').textContent = (deckIdx + 1) + ' / ' + deck.length;
+}
+
+function flipCard() {
+  showingBack = !showingBack;
+  document.getElementById('cardInner').classList.toggle('flipped', showingBack);
+  if (showingBack && deck[deckIdx]) speak(deck[deckIdx].jp);
+}
+
+function speakCard() {
+  if (deck[deckIdx]) speak(deck[deckIdx].jp);
+}
+
+function nextCard() {
+  deckIdx = (deckIdx + 1) % deck.length;
+  showCard();
+  updateStreak();
+}
+
+function prevCard() {
+  deckIdx = (deckIdx - 1 + deck.length) % deck.length;
+  showCard();
+}
+
+function markLearned() {
+  if (!deck[deckIdx]) return;
+  const card = deck[deckIdx];
+  if (card.type === 'kana') {
+    state.learnedKana[card.set + ':' + card.jp] = true;
+  } else {
+    state.learnedVocab[card.jp] = true;
+  }
+  saveState();
+  toast('Marked as learned!');
+  nextCard();
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('page-flashcards').classList.contains('active')) {
+    if (e.key === 'ArrowRight') nextCard();
+    if (e.key === 'ArrowLeft') prevCard();
+    if (e.key === ' ') { e.preventDefault(); flipCard(); }
+  }
+});
+
+// ─── VOCAB ───────────────────────────────────────────────────────────────────
+
+let currentVocabCat = 'greetings';
+
+function renderVocabCats() {
+  const cats = document.getElementById('vocabCats');
+  cats.innerHTML = '';
+  Object.keys(VOCAB).forEach(cat => {
+    const b = document.createElement('div');
+    b.className = 'vocab-cat' + (cat === currentVocabCat ? ' active' : '');
+    b.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+    b.onclick = () => {
+      currentVocabCat = cat;
+      document.querySelectorAll('.vocab-cat').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      renderVocabList();
+    };
+    cats.appendChild(b);
+  });
+}
+
+function renderVocabList() {
+  const list = document.getElementById('vocabList');
+  list.innerHTML = '';
+  VOCAB[currentVocabCat].forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'vocab-card';
+    card.innerHTML = `
+      <div class="vocab-jp">${v.jp}</div>
+      <div class="vocab-rom">${v.r}</div>
+      <div class="vocab-en">${v.en}</div>
+      <button class="vocab-speak" onclick="event.stopPropagation();speak('${v.jp.replace(/'/g,"\\'")}')">🔊</button>
+    `;
+    card.onclick = () => { speak(v.jp); updateStreak(); };
+    list.appendChild(card);
+  });
+}
+
+// ─── PHRASES ─────────────────────────────────────────────────────────────────
+
+function renderPhrases() {
+  const list = document.getElementById('phraseList');
+  PHRASES.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'phrase-card';
+    const safeJp = p.jp.replace(/'/g,"\\'");
+    card.innerHTML = `
+      <div class="phrase-jp">${p.jp}</div>
+      <div class="phrase-info">
+        <div class="phrase-rom">${p.r}</div>
+        <div class="phrase-en">${p.en}</div>
+      </div>
+      <button class="phrase-speak" onclick="speak('${safeJp}')">🔊</button>
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+
+let quizQuestions = [];
+let quizCurrent = 0;
+let quizCorrect = 0;
+let quizAnswered = false;
+let quizType = 'jp2rom';
+
+function buildQuizPool(deckKey) {
+  let pool = [];
+  if (deckKey === 'hiragana' || deckKey === 'katakana') {
+    pool = getAllKana(deckKey);
+  } else if (deckKey === 'all-vocab') {
+    pool = Object.values(VOCAB).flat().map(v => ({jp:v.jp,r:v.r,en:v.en,type:'vocab'}));
+  } else {
+    const cat = deckKey.replace('vocab-', '');
+    pool = getVocabDeck(cat);
+  }
+  return pool;
+}
+
+function startQuiz() {
+  const deckKey = document.getElementById('quizDeck').value;
+  quizType = document.getElementById('quizType').value;
+  const count = parseInt(document.getElementById('quizCount').value);
+  const pool = buildQuizPool(deckKey);
+
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  quizQuestions = shuffled.slice(0, Math.min(count, shuffled.length));
+  quizCurrent = 0;
+  quizCorrect = 0;
+
+  document.getElementById('quizSetup').classList.add('hidden');
+  document.getElementById('quizPlay').classList.add('active');
+  document.getElementById('quizResult').classList.remove('active');
+
+  renderQuestion();
+}
+
+function renderQuestion() {
+  quizAnswered = false;
+  const q = quizQuestions[quizCurrent];
+  const total = quizQuestions.length;
+  document.getElementById('quizFill').style.width = (quizCurrent / total * 100) + '%';
+  document.getElementById('quizScore').textContent = quizCorrect + '/' + quizCurrent;
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('quizNextBtn').classList.remove('visible');
+
+  let questionText, questionSub, answerKey;
+  switch (quizType) {
+    case 'jp2rom': questionText = q.jp; questionSub = 'Choose the romaji'; answerKey = q.r; break;
+    case 'jp2en':  questionText = q.jp; questionSub = 'Choose the English meaning'; answerKey = q.en; break;
+    case 'rom2jp': questionText = q.r;  questionSub = 'Choose the Japanese'; answerKey = q.jp; break;
+    case 'en2jp':  questionText = q.en; questionSub = 'Choose the Japanese'; answerKey = q.jp; break;
+  }
+
+  document.getElementById('quizQ').textContent = questionText;
+  document.getElementById('quizQSub').textContent = questionSub;
+
+  const allPool = buildQuizPool(document.getElementById('quizDeck').value);
+  let wrongChoices = allPool
+    .filter(x => {
+      const wrongAns = quizType === 'jp2rom' ? x.r : quizType === 'jp2en' ? x.en : quizType === 'rom2jp' ? x.jp : x.jp;
+      return wrongAns !== answerKey;
+    })
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3)
+    .map(x => quizType === 'jp2rom' ? x.r : quizType === 'jp2en' ? x.en : x.jp);
+
+  const choices = [...wrongChoices, answerKey].sort(() => Math.random() - 0.5);
+
+  const container = document.getElementById('quizChoices');
+  container.innerHTML = '';
+  choices.forEach(ch => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-choice';
+    btn.textContent = ch;
+    btn.onclick = () => handleAnswer(ch, answerKey, q.jp);
+    container.appendChild(btn);
+  });
+}
+
+function handleAnswer(chosen, correct, jp) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  speak(jp);
+
+  const btns = document.querySelectorAll('.quiz-choice');
+  btns.forEach(b => {
+    b.classList.add('disabled');
+    if (b.textContent === correct) b.classList.add('correct');
+    else if (b.textContent === chosen && chosen !== correct) b.classList.add('wrong');
+  });
+
+  if (chosen === correct) {
+    quizCorrect++;
+    document.getElementById('quizFeedback').textContent = '✓ Correct!';
+    document.getElementById('quizFeedback').style.color = 'var(--accent2)';
+  } else {
+    document.getElementById('quizFeedback').textContent = '✗ The answer is: ' + correct;
+    document.getElementById('quizFeedback').style.color = '#ef4444';
+  }
+
+  document.getElementById('quizNextBtn').classList.add('visible');
+  updateStreak();
+}
+
+function nextQuestion() {
+  quizCurrent++;
+  if (quizCurrent >= quizQuestions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quizPlay').classList.remove('active');
+  document.getElementById('quizResult').classList.add('active');
+
+  const pct = Math.round(quizCorrect / quizQuestions.length * 100);
+  document.getElementById('resultScore').textContent = pct + '%';
+  document.getElementById('resultLabel').textContent = quizCorrect + ' / ' + quizQuestions.length + ' correct';
+
+  let msg;
+  if (pct === 100) msg = 'Perfect! 素晴らしい！';
+  else if (pct >= 80) msg = 'Great job! よくできました！';
+  else if (pct >= 60) msg = 'Good effort! もう少し！';
+  else msg = 'Keep practicing! 練習しましょう！';
+  document.getElementById('resultMsg').textContent = msg;
+
+  state.quizHistory.push({ date: new Date().toISOString(), pct, correct: quizCorrect, total: quizQuestions.length });
+  if (state.quizHistory.length > 50) state.quizHistory.shift();
+  saveState();
+}
+
+function restartQuiz() {
+  document.getElementById('quizResult').classList.remove('active');
+  document.getElementById('quizPlay').classList.remove('active');
+  document.getElementById('quizSetup').classList.remove('hidden');
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+
+function renderProgress() {
+  const hiraganaTotal = HIRAGANA.reduce((s, g) => s + g.chars.length, 0);
+  const katakanaTotal = KATAKANA.reduce((s, g) => s + g.chars.length, 0);
+  const vocabTotal = Object.values(VOCAB).flat().length;
+
+  const learnedH = Object.keys(state.learnedKana).filter(k => k.startsWith('hiragana:')).length;
+  const learnedK = Object.keys(state.learnedKana).filter(k => k.startsWith('katakana:')).length;
+  const learnedV = Object.keys(state.learnedVocab).length;
+  const quizCount = state.quizHistory.length;
+  const avgScore = quizCount > 0 ? Math.round(state.quizHistory.reduce((s, q) => s + q.pct, 0) / quizCount) : 0;
+
+  document.getElementById('progressGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${state.streak}</div><div class="stat-label">Day streak 🔥</div></div>
+    <div class="stat-card"><div class="stat-num">${learnedH}</div><div class="stat-label">Hiragana learned</div></div>
+    <div class="stat-card"><div class="stat-num">${learnedK}</div><div class="stat-label">Katakana learned</div></div>
+    <div class="stat-card"><div class="stat-num">${learnedV}</div><div class="stat-label">Vocab learned</div></div>
+    <div class="stat-card"><div class="stat-num">${quizCount}</div><div class="stat-label">Quizzes taken</div></div>
+    <div class="stat-card"><div class="stat-num">${avgScore}%</div><div class="stat-label">Average quiz score</div></div>
+  `;
+
+  document.getElementById('progressBars').innerHTML = `
+    <div class="progress-bar-label"><span>Hiragana</span><span>${learnedH}/${hiraganaTotal}</span></div>
+    <div class="pbar"><div class="pbar-fill" style="width:${learnedH/hiraganaTotal*100}%;background:var(--accent)"></div></div>
+    <div class="progress-bar-label"><span>Katakana</span><span>${learnedK}/${katakanaTotal}</span></div>
+    <div class="pbar"><div class="pbar-fill" style="width:${learnedK/katakanaTotal*100}%;background:var(--accent3)"></div></div>
+    <div class="progress-bar-label"><span>Vocabulary</span><span>${learnedV}/${vocabTotal}</span></div>
+    <div class="pbar"><div class="pbar-fill" style="width:${learnedV/vocabTotal*100}%;background:var(--accent2)"></div></div>
+  `;
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress? This cannot be undone.')) return;
+  state = { learnedKana: {}, learnedVocab: {}, quizHistory: [], streak: 0, lastStudyDate: null };
+  saveState();
+  renderProgress();
+  initStreak();
+  toast('Progress reset.');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+renderKana();
+loadDeck();
+renderVocabCats();
+renderVocabList();
+renderPhrases();
+initStreak();
+</script>
+</body>
+</html>
