@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shadow Kombat</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+      color: #fff;
+      user-select: none;
+      overflow: hidden;
+    }
+    #game-wrapper { position: relative; }
+    canvas { display: block; }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.82);
+      z-index: 10;
+    }
+    #overlay h1 { font-size: 42px; font-weight: 900; letter-spacing: 6px; color: #e00; text-shadow: 0 0 20px #f00; margin-bottom: 6px; }
+    #overlay h2 { font-size: 18px; color: #aaa; letter-spacing: 3px; margin-bottom: 40px; }
+    #overlay .btn-row { display: flex; gap: 20px; }
+    .menu-btn {
+      background: #1a0000;
+      border: 2px solid #c00;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 15px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 14px 32px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .menu-btn:hover { background: #c00; box-shadow: 0 0 16px #f005; }
+    #overlay .controls-info {
+      margin-top: 36px;
+      font-size: 11px;
+      color: #555;
+      text-align: center;
+      line-height: 2;
+      letter-spacing: 1px;
+    }
+    #overlay .controls-info span { color: #888; }
+    #round-banner {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 8;
+    }
+    #round-banner .banner-text {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: 8px;
+      color: #ff0;
+      text-shadow: 0 0 30px #f80, 0 0 60px #f000;
+      animation: bannerPop 0.4s ease-out;
+    }
+    @keyframes bannerPop {
+      from { transform: scale(2.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+<div id="game-wrapper">
+  <canvas id="c" width="800" height="460"></canvas>
+
+  <div id="overlay">
+    <h1>SHADOW</h1>
+    <h2>K O M B A T</h2>
+    <div class="btn-row">
+      <button class="menu-btn" id="btn1p">1 PLAYER</button>
+      <button class="menu-btn" id="btn2p">2 PLAYERS</button>
+    </div>
+    <div class="controls-info">
+      <span>PLAYER 1</span> &nbsp; A/D Move &nbsp; W Jump &nbsp; U Punch &nbsp; I Kick &nbsp; O Block &nbsp; J Special<br>
+      <span>PLAYER 2</span> &nbsp; ←/→ Move &nbsp; ↑ Jump &nbsp; 1 Punch &nbsp; 2 Kick &nbsp; 3 Block &nbsp; 4 Special
+    </div>
+  </div>
+
+  <div id="round-banner"><div class="banner-text" id="banner-text"></div></div>
+</div>
+
+<script>
+const C = document.getElementById('c');
+const ctx = C.getContext('2d');
+const W = C.width, H = C.height;
+const overlay = document.getElementById('overlay');
+const roundBanner = document.getElementById('round-banner');
+const bannerText = document.getElementById('banner-text');
+
+// ── AUDIO ──────────────────────────────────────────────────────────────────
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+function beep(freq, type, dur, vol = 0.3, detune = 0) {
+  try {
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    o.type = type; o.frequency.setValueAtTime(freq, AC.currentTime);
+    if (detune) o.detune.setValueAtTime(detune, AC.currentTime);
+    g.gain.setValueAtTime(vol, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + dur);
+    o.start(); o.stop(AC.currentTime + dur);
+  } catch(e) {}
+}
+function sfxPunch()   { beep(180, 'sawtooth', 0.08, 0.4); beep(120, 'square', 0.06, 0.2); }
+function sfxKick()    { beep(100, 'sawtooth', 0.12, 0.5); }
+function sfxBlock()   { beep(300, 'square', 0.05, 0.2); }
+function sfxSpecial() {
+  [0,100,200].forEach(d => setTimeout(() => beep(440 - d*2, 'sawtooth', 0.15, 0.3, d*50), d));
+}
+function sfxHit()     { beep(80, 'sawtooth', 0.1, 0.6, -200); }
+function sfxFinisher(){ [0,80,160,240].forEach(d => setTimeout(() => beep(60+d, 'sawtooth', 0.3, 0.5), d)); }
+function sfxRound()   { [0,150,300].forEach((d,i) => setTimeout(() => beep([523,659,784][i], 'square', 0.2, 0.3), d)); }
+
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const FLOOR_Y = 380;
+const GRAVITY = 0.7;
+const JUMP_VY = -16;
+const MOVE_SPD = 4;
+const MAX_HP = 100;
+const ROUND_TIME = 60; // seconds
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let mode = null; // 'cpu' | '2p'
+let gameState = 'menu'; // menu | fighting | roundover | gameover
+let round = 1;
+let wins = [0, 0];
+let roundTimer = ROUND_TIME;
+let timerTick = 0;
+let frameCount = 0;
+let particles = [];
+let hitTexts = [];
+let keys = {};
+
+// ── FIGHTER ────────────────────────────────────────────────────────────────
+function makeFighter(x, facing, colorA, colorB, name) {
+  return {
+    name,
+    x, y: FLOOR_Y,
+    vx: 0, vy: 0,
+    w: 48, h: 80,
+    hp: MAX_HP,
+    facing, // 1 = right, -1 = left
+    colorA, colorB,
+    state: 'idle',   // idle | walk | jump | punch | kick | block | special | hurt | dead | victory
+    stateTimer: 0,
+    attackBox: null,
+    comboCount: 0,
+    comboTimer: 0,
+    finisherAvail: false,
+    onGround: true,
+    blocking: false,
+    hitCooldown: 0,
+    specialCooldown: 0,
+    // cpu only
+    cpuTimer: 0,
+    cpuAction: 'idle',
+  };
+}
+
+let p1, p2;
+
+function initFighters() {
+  p1 = makeFighter(160, 1,  '#e03030', '#ff8888', 'SCORPION');
+  p2 = makeFighter(640, -1, '#3070e0', '#88aaff', 'SUB-ZERO');
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function rectOverlap(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
+function spawnParticles(x, y, color, n = 8) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, s = Math.random() * 4 + 1;
+    particles.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s - 2,
+      color, life: 20 + Math.random()*15, maxLife: 35 });
+  }
+}
+
+function showHitText(x, y, text, color) {
+  hitTexts.push({ x, y, text, color, life: 45 });
+}
+
+function showBanner(text, duration = 1400) {
+  bannerText.textContent = text;
+  roundBanner.style.display = 'flex';
+  setTimeout(() => { roundBanner.style.display = 'none'; }, duration);
+}
+
+// ── ATTACK ─────────────────────────────────────────────────────────────────
+function applyAttack(attacker, defender, dmg, type) {
+  if (defender.hitCooldown > 0) return;
+  if (defender.blocking && defender.facing !== attacker.facing) {
+    sfxBlock();
+    showHitText(defender.x, defender.y - 60, 'BLOCK', '#88f');
+    spawnParticles(defender.x + defender.facing * 20, defender.y - 40, '#aaf', 5);
+    defender.hitCooldown = 20;
+    return;
+  }
+  defender.hp = Math.max(0, defender.hp - dmg);
+  defender.hitCooldown = 25;
+  attacker.comboCount++;
+  attacker.comboTimer = 90;
+  if (type === 'special') { sfxSpecial(); sfxHit(); } else sfxHit();
+  spawnParticles(defender.x, defender.y - 40, defender.colorA, 10);
+  const labels = { punch: 'HIT!', kick: 'KICK!', special: 'SPECIAL!' };
+  const colors  = { punch: '#ff0', kick: '#f80', special: '#f0f' };
+  showHitText(defender.x, defender.y - 70, labels[type] || 'HIT!', colors[type] || '#ff0');
+
+  if (attacker.comboCount >= 3) showHitText(attacker.x, attacker.y - 100, attacker.comboCount + ' HIT COMBO!', '#0ff');
+
+  if (type !== 'special') {
+    defender.state = 'hurt'; defender.stateTimer = 18;
+    defender.vx = attacker.facing * 3;
+  } else {
+    defender.state = 'hurt'; defender.stateTimer = 30;
+    defender.vx = attacker.facing * 6; defender.vy = -8;
+  }
+}
+
+// ── INPUT → ACTION ─────────────────────────────────────────────────────────
+function handleInput(f, isP1) {
+  if (f.state === 'dead' || f.state === 'victory') return;
+
+  const left  = isP1 ? (keys['a'] || keys['A']) : keys['ArrowLeft'];
+  const right = isP1 ? (keys['d'] || keys['D']) : keys['ArrowRight'];
+  const jump  = isP1 ? (keys['w'] || keys['W']) : keys['ArrowUp'];
+  const punch = isP1 ? (keys['u'] || keys['U']) : keys['1'];
+  const kick  = isP1 ? (keys['i'] || keys['I']) : keys['2'];
+  const block = isP1 ? (keys['o'] || keys['O']) : keys['3'];
+  const spec  = isP1 ? (keys['j'] || keys['J']) : keys['4'];
+
+  f.blocking = false;
+
+  if (['punch','kick','special','hurt'].includes(f.state)) {
+    f.stateTimer--;
+    if (f.stateTimer <= 0) f.state = 'idle';
+    return;
+  }
+
+  if (block) { f.blocking = true; f.state = 'block'; return; }
+
+  // Special
+  if (spec && f.specialCooldown <= 0) {
+    f.state = 'special'; f.stateTimer = 28; f.specialCooldown = 120;
+    sfxSpecial();
+    setAttackBox(f, 'special');
+    return;
+  }
+
+  if (punch) { f.state = 'punch'; f.stateTimer = 14; sfxPunch(); setAttackBox(f, 'punch'); return; }
+  if (kick)  { f.state = 'kick';  f.stateTimer = 18; sfxKick();  setAttackBox(f, 'kick');  return; }
+
+  if (jump && f.onGround) { f.vy = JUMP_VY; f.onGround = false; f.state = 'jump'; }
+
+  if (left)       { f.vx = -MOVE_SPD; f.state = f.onGround ? 'walk' : f.state; }
+  else if (right) { f.vx =  MOVE_SPD; f.state = f.onGround ? 'walk' : f.state; }
+  else            { f.vx = 0; if (f.onGround && f.state === 'walk') f.state = 'idle'; }
+}
+
+function setAttackBox(f, type) {
+  const reach = type === 'special' ? 120 : type === 'kick' ? 80 : 65;
+  const h     = type === 'kick' ? 30 : 25;
+  const yOff  = type === 'kick' ? -30 : -50;
+  f.attackBox = { x: f.x + (f.facing > 0 ? 0 : -reach), y: f.y + yOff, w: reach, h, type, life: type === 'special' ? 14 : 8 };
+}
+
+// ── CPU AI ─────────────────────────────────────────────────────────────────
+function cpuThink(cpu, player) {
+  if (cpu.state === 'dead' || cpu.state === 'victory') return;
+  if (['punch','kick','special','hurt','block'].includes(cpu.state)) return;
+
+  cpu.cpuTimer--;
+  const dx = player.x - cpu.x;
+  const dist = Math.abs(dx);
+  const hp_ratio = cpu.hp / MAX_HP;
+
+  if (cpu.cpuTimer > 0) {
+    // execute current action
+    if (cpu.cpuAction === 'approach') {
+      cpu.vx = Math.sign(dx) * MOVE_SPD;
+      cpu.state = 'walk';
+    } else if (cpu.cpuAction === 'retreat') {
+      cpu.vx = -Math.sign(dx) * MOVE_SPD;
+      cpu.state = 'walk';
+    } else {
+      cpu.vx = 0; cpu.state = 'idle';
+    }
+    return;
+  }
+
+  // Decide next action
+  const roll = Math.random();
+  cpu.vx = 0;
+
+  if (dist > 220) {
+    cpu.cpuAction = 'approach'; cpu.cpuTimer = 30 + Math.random()*20 | 0;
+  } else if (dist < 55) {
+    if (roll < 0.08 && cpu.specialCooldown <= 0) {
+      cpu.state = 'special'; cpu.stateTimer = 28; cpu.specialCooldown = 120;
+      setAttackBox(cpu, 'special'); cpu.cpuTimer = 5;
+    } else if (roll < 0.3) {
+      cpu.state = 'punch'; cpu.stateTimer = 14; sfxPunch(); setAttackBox(cpu, 'punch'); cpu.cpuTimer = 5;
+    } else if (roll < 0.5) {
+      cpu.state = 'kick'; cpu.stateTimer = 18; sfxKick(); setAttackBox(cpu, 'kick'); cpu.cpuTimer = 5;
+    } else if (roll < 0.65) {
+      cpu.blocking = true; cpu.state = 'block'; cpu.cpuTimer = 20 + Math.random()*20|0;
+      cpu.cpuAction = 'block';
+    } else {
+      cpu.cpuAction = 'retreat'; cpu.cpuTimer = 15;
+    }
+  } else if (dist < 120) {
+    if (roll < 0.05 && cpu.specialCooldown <= 0) {
+      cpu.state = 'special'; cpu.stateTimer = 28; cpu.specialCooldown = 120;
+      setAttackBox(cpu, 'special'); cpu.cpuTimer = 5;
+    } else if (roll < 0.25) {
+      cpu.state = 'kick'; cpu.stateTimer = 18; sfxKick(); setAttackBox(cpu, 'kick'); cpu.cpuTimer = 5;
+    } else if (roll < 0.45) {
+      if (!cpu.onGround) {}
+      else { cpu.vy = JUMP_VY; cpu.onGround = false; cpu.state = 'jump'; }
+      cpu.cpuTimer = 10;
+    } else if (roll < 0.6 && hp_ratio < 0.4) {
+      cpu.blocking = true; cpu.state = 'block'; cpu.cpuTimer = 25;
+      cpu.cpuAction = 'block';
+    } else {
+      cpu.cpuAction = 'approach'; cpu.cpuTimer = 20;
+    }
+  } else {
+    if (roll < 0.4) { cpu.cpuAction = 'approach'; cpu.cpuTimer = 25; }
+    else { cpu.cpuAction = 'idle'; cpu.cpuTimer = 15; }
+  }
+}
+
+// ── PHYSICS ────────────────────────────────────────────────────────────────
+function updatePhysics(f) {
+  if (f.state === 'dead') return;
+
+  f.x += f.vx;
+  f.vy += GRAVITY;
+  f.y += f.vy;
+
+  if (f.y >= FLOOR_Y) { f.y = FLOOR_Y; f.vy = 0; f.onGround = true; if (f.state === 'jump') f.state = 'idle'; }
+  f.x = clamp(f.x, f.w/2, W - f.w/2);
+
+  if (f.hitCooldown > 0) f.hitCooldown--;
+  if (f.specialCooldown > 0) f.specialCooldown--;
+  if (f.comboTimer > 0) { f.comboTimer--; if (f.comboTimer === 0) f.comboCount = 0; }
+
+  // Attack box lifetime
+  if (f.attackBox) {
+    f.attackBox.life--;
+    if (f.attackBox.life <= 0) f.attackBox = null;
+  }
+
+  // Face opponent (only when not attacking / blocking)
+  // updated below after both fighters exist
+}
+
+function faceEachOther(a, b) {
+  if (!['punch','kick','special','hurt','dead','victory'].includes(a.state)) a.facing = a.x < b.x ? 1 : -1;
+  if (!['punch','kick','special','hurt','dead','victory'].includes(b.state)) b.facing = b.x < a.x ? 1 : -1;
+}
+
+// ── DRAW FIGHTER ───────────────────────────────────────────────────────────
+function drawFighter(f, flash) {
+  const x = f.x, y = f.y;
+  const dir = f.facing;
+  const col  = flash ? '#fff' : f.colorA;
+  const col2 = flash ? '#fff' : f.colorB;
+  const dead = f.state === 'dead';
+  const block = f.state === 'block';
+  const victory = f.state === 'victory';
+
+  ctx.save();
+  if (dead) ctx.globalAlpha = 0.6;
+
+  if (victory) {
+    // Arms raised
+    drawBody(x, y, col, col2, dir, 'victory');
+  } else if (block) {
+    drawBody(x, y, col, col2, dir, 'block');
+  } else if (f.state === 'punch') {
+    drawBody(x, y, col, col2, dir, 'punch');
+  } else if (f.state === 'kick') {
+    drawBody(x, y, col, col2, dir, 'kick');
+  } else if (f.state === 'special') {
+    drawBody(x, y, col, col2, dir, 'special');
+  } else if (f.state === 'hurt') {
+    drawBody(x, y, col, col2, dir, 'hurt');
+  } else if (dead) {
+    drawBody(x, y, col, col2, dir, 'dead');
+  } else {
+    const walkFrame = Math.floor(frameCount / 8) % 2;
+    drawBody(x, y, col, col2, dir, f.state === 'walk' ? (walkFrame ? 'walk1' : 'walk2') : 'idle');
+  }
+  ctx.restore();
+
+  // Name tag
+  ctx.fillStyle = '#ffffff88';
+  ctx.font = 'bold 9px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText(f.name, x, y - 92);
+  ctx.textAlign = 'left';
+}
+
+function drawBody(x, y, col, col2, dir, pose) {
+  // y is feet, head is y-80
+  const headY = y - 80, torsoTop = y - 65, torsoBot = y - 40, legY = y;
+
+  ctx.fillStyle = col;
+
+  // Head
+  ctx.beginPath();
+  ctx.ellipse(x, headY + 10, 14, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x + dir * 2 - 3, headY + 6, 5, 4);
+  ctx.fillStyle = '#f00';
+  ctx.fillRect(x + dir * 4 - 2, headY + 7, 3, 2);
+
+  ctx.fillStyle = col;
+
+  // Torso
+  if (pose === 'block') {
+    ctx.fillRect(x - 16, torsoTop, 32, 26);
+    // Arms crossed in front
+    ctx.fillStyle = col2;
+    ctx.fillRect(x + dir * 2, torsoTop + 2, 18, 10);
+    ctx.fillRect(x + dir * 2, torsoTop + 12, 18, 10);
+    // Legs normal
+    ctx.fillStyle = col;
+    ctx.fillRect(x - 12, torsoBot, 10, 28);
+    ctx.fillRect(x + 2,  torsoBot, 10, 28);
+    return;
+  }
+
+  ctx.fillRect(x - 16, torsoTop, 32, 26);
+
+  // Shoulder glow for special
+  if (pose === 'special') {
+    ctx.fillStyle = '#f0f';
+    ctx.globalAlpha *= 0.6;
+    ctx.beginPath();
+    ctx.arc(x, torsoTop + 12, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha /= 0.6;
+    ctx.fillStyle = col;
+  }
+
+  // Arms
+  ctx.fillStyle = col2;
+  if (pose === 'punch') {
+    ctx.fillRect(x + dir * 14, torsoTop + 4, dir * 26, 10);
+    ctx.fillRect(x - dir * 16, torsoTop + 4, dir * 14, 10); // rear arm back
+  } else if (pose === 'kick') {
+    ctx.fillRect(x - dir * 10, torsoTop + 2, dir * 18, 10);
+    ctx.fillRect(x - dir * 14, torsoTop + 14, dir * 14, 10);
+  } else if (pose === 'victory') {
+    // Arms raised up
+    ctx.fillRect(x - 26, torsoTop - 14, 10, 24);
+    ctx.fillRect(x + 16,  torsoTop - 14, 10, 24);
+  } else if (pose === 'hurt') {
+    ctx.fillRect(x - dir * 18, torsoTop + 2, dir * 16, 10);
+    ctx.fillRect(x + dir * 6, torsoTop + 10, dir * 14, 10);
+  } else if (pose === 'dead') {
+    ctx.fillRect(x - 26, torsoTop + 18, 22, 10);
+    ctx.fillRect(x + 4,  torsoTop + 18, 22, 10);
+  } else if (pose === 'special') {
+    ctx.fillStyle = '#f0f';
+    ctx.fillRect(x + dir * 16, torsoTop, dir * 28, 10);
+    ctx.fillRect(x - dir * 20, torsoTop + 12, dir * 18, 10);
+  } else {
+    ctx.fillRect(x - dir * 14, torsoTop + 2, dir * 14, 10);
+    ctx.fillRect(x + dir * 14,  torsoTop + 10, dir * 14, 10);
+  }
+
+  // Legs
+  ctx.fillStyle = col;
+  if (pose === 'kick') {
+    ctx.fillRect(x - 12, torsoBot, 10, 20);
+    // Kicking leg extended
+    ctx.fillRect(x + dir * 4, torsoBot, 10, 14);
+    ctx.fillRect(x + dir * 14, torsoBot + 6, dir * 22, 10);
+  } else if (pose === 'dead') {
+    // Fallen: legs out to side
+    ctx.fillRect(x + 10, torsoBot + 4, 30, 10);
+    ctx.fillRect(x - 40, torsoBot + 4, 30, 10);
+  } else if (pose === 'walk1') {
+    ctx.fillRect(x - 14, torsoBot, 10, 18);
+    ctx.fillRect(x + 4,  torsoBot + 8, 10, 20);
+    ctx.fillRect(x - 14, torsoBot + 18, 10, 10);
+  } else if (pose === 'walk2') {
+    ctx.fillRect(x - 14, torsoBot + 8, 10, 20);
+    ctx.fillRect(x + 4,  torsoBot, 10, 18);
+    ctx.fillRect(x + 4,  torsoBot + 18, 10, 10);
+  } else {
+    ctx.fillRect(x - 12, torsoBot, 10, 28);
+    ctx.fillRect(x + 2,  torsoBot, 10, 28);
+  }
+
+  // Boots
+  ctx.fillStyle = '#333';
+  if (pose === 'dead') {
+    ctx.fillRect(x + 36, torsoBot + 4, 10, 10);
+    ctx.fillRect(x - 46, torsoBot + 4, 10, 10);
+  } else if (pose !== 'kick') {
+    ctx.fillRect(x - 14, y - 10, 12, 10);
+    ctx.fillRect(x + 2,  y - 10, 12, 10);
+  }
+}
+
+// ── DRAW HUD ───────────────────────────────────────────────────────────────
+function drawHUD() {
+  // P1 health bar
+  const barW = 280, barH = 18;
+  const p1hp = clamp(p1.hp / MAX_HP, 0, 1);
+  const p2hp = clamp(p2.hp / MAX_HP, 0, 1);
+
+  // P1
+  ctx.fillStyle = '#333'; ctx.fillRect(20, 20, barW, barH);
+  const p1col = p1hp > 0.5 ? '#3e3' : p1hp > 0.25 ? '#ee3' : '#e33';
+  ctx.fillStyle = p1col; ctx.fillRect(20, 20, barW * p1hp, barH);
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.strokeRect(20, 20, barW, barH);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Courier New';
+  ctx.fillText(p1.name, 22, 15);
+
+  // P2
+  ctx.fillStyle = '#333'; ctx.fillRect(W - 20 - barW, 20, barW, barH);
+  const p2col = p2hp > 0.5 ? '#3e3' : p2hp > 0.25 ? '#ee3' : '#e33';
+  ctx.fillStyle = p2col; ctx.fillRect(W - 20 - barW * p2hp, 20, barW * p2hp, barH);
+  ctx.strokeStyle = '#666'; ctx.strokeRect(W - 20 - barW, 20, barW, barH);
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#fff'; ctx.fillText(p2.name, W - 22, 15);
+  ctx.textAlign = 'left';
+
+  // Round / Wins
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff0'; ctx.font = 'bold 13px Courier New';
+  ctx.fillText('ROUND ' + round, W/2, 15);
+  ctx.fillStyle = '#fff'; ctx.font = '11px Courier New';
+  ctx.fillText('●'.repeat(wins[0]) + '○'.repeat(Math.max(0,2-wins[0])) + '  vs  ' + '○'.repeat(Math.max(0,2-wins[1])) + '●'.repeat(wins[1]), W/2, 52);
+  // Timer
+  const secs = Math.ceil(roundTimer);
+  const timerCol = secs <= 10 ? '#f44' : '#fff';
+  ctx.fillStyle = timerCol; ctx.font = 'bold 22px Courier New';
+  ctx.fillText(secs, W/2, 40);
+  ctx.textAlign = 'left';
+
+  // Special cooldown pip
+  ctx.fillStyle = p1.specialCooldown > 0 ? '#555' : '#f0f';
+  ctx.fillRect(22, 44, 60, 5);
+  ctx.fillStyle = p2.specialCooldown > 0 ? '#555' : '#f0f';
+  ctx.fillRect(W - 82, 44, 60, 5);
+}
+
+// ── DRAW SCENE ─────────────────────────────────────────────────────────────
+function drawScene() {
+  // Sky gradient
+  const sky = ctx.createLinearGradient(0, 0, 0, FLOOR_Y);
+  sky.addColorStop(0, '#0a0010');
+  sky.addColorStop(1, '#1a0020');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+  // Moon
+  ctx.fillStyle = '#ffe8c0';
+  ctx.beginPath(); ctx.arc(680, 60, 36, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#0a0010';
+  ctx.beginPath(); ctx.arc(690, 52, 30, 0, Math.PI*2); ctx.fill();
+
+  // Stars
+  for (let i = 0; i < 60; i++) {
+    const sx = (i * 191 + 37) % W, sy = (i * 113) % (FLOOR_Y - 10);
+    const br = (Math.sin(frameCount * 0.05 + i) * 0.3 + 0.7);
+    ctx.fillStyle = `rgba(255,255,255,${br * 0.6})`;
+    ctx.fillRect(sx, sy, 1, 1);
+  }
+
+  // Temple pillars background
+  ctx.fillStyle = '#1a0a30';
+  [-1,0,1,2,3,4,5].forEach(i => {
+    const px = i * 130 + 20;
+    ctx.fillRect(px, 160, 30, FLOOR_Y - 160);
+    ctx.fillRect(px - 5, 155, 40, 12);
+  });
+
+  // Floor
+  const floorGrad = ctx.createLinearGradient(0, FLOOR_Y, 0, H);
+  floorGrad.addColorStop(0, '#2a1040');
+  floorGrad.addColorStop(1, '#0a0010');
+  ctx.fillStyle = floorGrad; ctx.fillRect(0, FLOOR_Y, W, H - FLOOR_Y);
+
+  // Floor line glow
+  ctx.strokeStyle = '#8020c0'; ctx.lineWidth = 2;
+  ctx.shadowColor = '#a040e0'; ctx.shadowBlur = 10;
+  ctx.beginPath(); ctx.moveTo(0, FLOOR_Y); ctx.lineTo(W, FLOOR_Y); ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Shadows under fighters
+  [p1, p2].forEach(f => {
+    if (f.state === 'dead') return;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(f.x, FLOOR_Y + 4, 26, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// ── MAIN UPDATE ────────────────────────────────────────────────────────────
+function update() {
+  if (gameState !== 'fighting') return;
+  frameCount++;
+
+  // Timer
+  timerTick++;
+  if (timerTick >= 60) { timerTick = 0; roundTimer -= 1; }
+  if (roundTimer <= 0) { endRound(true); return; }
+
+  // Input
+  handleInput(p1, true);
+  if (mode === 'cpu') cpuThink(p2, p1);
+  else handleInput(p2, false);
+
+  // Physics
+  updatePhysics(p1);
+  updatePhysics(p2);
+  faceEachOther(p1, p2);
+
+  // Prevent overlap
+  const minDist = 54;
+  if (Math.abs(p1.x - p2.x) < minDist && p1.state !== 'dead' && p2.state !== 'dead') {
+    const push = (minDist - Math.abs(p1.x - p2.x)) / 2;
+    p1.x -= Math.sign(p1.x - p2.x) * push;
+    p2.x += Math.sign(p1.x - p2.x) * push;
+    p1.x = clamp(p1.x, p1.w/2, W - p1.w/2);
+    p2.x = clamp(p2.x, p2.w/2, W - p2.w/2);
+  }
+
+  // Attack collision
+  checkAttack(p1, p2);
+  checkAttack(p2, p1);
+
+  // Death check
+  if (p1.hp <= 0 && p1.state !== 'dead') { p1.state = 'dead'; endRound(false); return; }
+  if (p2.hp <= 0 && p2.state !== 'dead') { p2.state = 'dead'; endRound(false); return; }
+
+  // Particles & hit texts
+  particles = particles.filter(p => { p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life--; return p.life>0; });
+  hitTexts  = hitTexts.filter(t  => { t.y -= 0.8; t.life--; return t.life > 0; });
+}
+
+function checkAttack(attacker, defender) {
+  if (!attacker.attackBox) return;
+  const b = attacker.attackBox;
+  if (!rectOverlap(b.x, b.y, b.w, b.h, defender.x - defender.w/2, defender.y - defender.h, defender.w, defender.h)) return;
+  const dmgMap = { punch: 8, kick: 12, special: 22 };
+  applyAttack(attacker, defender, dmgMap[b.type] || 8, b.type);
+  attacker.attackBox = null;
+}
+
+// ── ROUND / GAME MANAGEMENT ────────────────────────────────────────────────
+function endRound(timeout) {
+  gameState = 'roundover';
+  let winner = null;
+  if (timeout) {
+    if (p1.hp > p2.hp) winner = 0;
+    else if (p2.hp > p1.hp) winner = 1;
+    // draw: no win added
+  } else {
+    winner = p1.hp > 0 ? 0 : 1;
+  }
+
+  if (winner !== null) {
+    wins[winner]++;
+    const wFighter = winner === 0 ? p1 : p2;
+    wFighter.state = 'victory';
+    const lFighter = winner === 0 ? p2 : p1;
+    lFighter.state = 'dead';
+
+    // Finisher opportunity
+    if (lFighter.hp <= 5) {
+      sfxFinisher();
+      showBanner('FINISH HIM!', 1600);
+    } else {
+      sfxRound();
+      showBanner(wFighter.name + ' WINS!', 1400);
+    }
+  } else {
+    showBanner('DRAW!', 1400);
+  }
+
+  setTimeout(() => {
+    if (wins[0] >= 2 || wins[1] >= 2) {
+      gameOver(wins[0] >= 2 ? p1.name : p2.name);
+    } else {
+      round++;
+      startFight();
+    }
+  }, 2200);
+}
+
+function gameOver(winnerName) {
+  gameState = 'gameover';
+  overlay.innerHTML = `
+    <h1 style="font-size:36px;margin-bottom:10px">${winnerName}</h1>
+    <h2 style="color:#f80;margin-bottom:8px">WINS THE MATCH!</h2>
+    <p style="color:#888;font-size:13px;margin-bottom:30px">Wins: ${wins[0]} – ${wins[1]}</p>
+    <div class="btn-row">
+      <button class="menu-btn" id="btn-rematch">REMATCH</button>
+      <button class="menu-btn" id="btn-menu">MENU</button>
+    </div>`;
+  overlay.style.display = 'flex';
+  document.getElementById('btn-rematch').onclick = () => { wins=[0,0]; round=1; overlay.style.display='none'; startFight(); };
+  document.getElementById('btn-menu').onclick = showMenu;
+}
+
+function startFight() {
+  initFighters();
+  roundTimer = ROUND_TIME; timerTick = 0;
+  gameState = 'fighting';
+  sfxRound();
+  showBanner('ROUND ' + round, 1000);
+}
+
+function showMenu() {
+  gameState = 'menu';
+  overlay.innerHTML = `
+    <h1>SHADOW</h1><h2>K O M B A T</h2>
+    <div class="btn-row">
+      <button class="menu-btn" id="btn1p">1 PLAYER</button>
+      <button class="menu-btn" id="btn2p">2 PLAYERS</button>
+    </div>
+    <div class="controls-info">
+      <span>PLAYER 1</span> &nbsp; A/D Move &nbsp; W Jump &nbsp; U Punch &nbsp; I Kick &nbsp; O Block &nbsp; J Special<br>
+      <span>PLAYER 2</span> &nbsp; ←/→ Move &nbsp; ↑ Jump &nbsp; 1 Punch &nbsp; 2 Kick &nbsp; 3 Block &nbsp; 4 Special
+    </div>`;
+  overlay.style.display = 'flex';
+  bindMenuBtns();
+}
+
+function bindMenuBtns() {
+  document.getElementById('btn1p').onclick = () => { mode='cpu'; wins=[0,0]; round=1; overlay.style.display='none'; AC.resume(); startFight(); };
+  document.getElementById('btn2p').onclick = () => { mode='2p';  wins=[0,0]; round=1; overlay.style.display='none'; AC.resume(); startFight(); };
+}
+
+// ── DRAW ───────────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawScene();
+
+  // Fighters
+  [p1, p2].forEach(f => {
+    const flash = f.hitCooldown > 0 && Math.floor(frameCount/3)%2===0;
+    drawFighter(f, flash);
+  });
+
+  // Particles
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - 2, p.y - 2, 5, 5);
+  });
+  ctx.globalAlpha = 1;
+
+  // Hit texts
+  hitTexts.forEach(t => {
+    ctx.globalAlpha = t.life / 45;
+    ctx.fillStyle = t.color;
+    ctx.font = 'bold 14px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText(t.text, t.x, t.y);
+  });
+  ctx.globalAlpha = 1; ctx.textAlign = 'left';
+
+  drawHUD();
+}
+
+// ── LOOP ───────────────────────────────────────────────────────────────────
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// ── INPUT ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if ([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+initFighters();
+bindMenuBtns();
+loop();
+</script>
+</body>
+</html>
