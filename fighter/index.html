@@ -188,7 +188,8 @@ const POSES={
 };
 function getJ(f,pk){
   const pose=POSES[pk]||POSES.idle, j={};
-  for(const [k,v] of Object.entries(pose)) j[k]=[f.x+v[0]*f.facing, f.y+v[1]];
+  const bob=f.state==='idle'?Math.sin(frameCount*0.05+(f.facing>0?0:Math.PI))*2:0;
+  for(const [k,v] of Object.entries(pose)) j[k]=[f.x+v[0]*f.facing, f.y+v[1]+bob];
   return j;
 }
 function getPK(f){
@@ -552,6 +553,7 @@ function drawBG(){
 
 // ── HUD ───────────────────────────────────────────────────────────────────────
 function drawHUD(){
+  if(gameState!=='fight')return;
   const BW=300, BH=22, BY=18;
   // P1 bar
   const r1=p1.hp/p1.maxHp;
@@ -810,8 +812,8 @@ function faceEach(){
 
 // ── MAIN UPDATE ──────────────────────────────────────────────────────────────
 function update(){
-  if(gameState!=='fight')return;
   frameCount++;
+  if(gameState!=='fight')return;
   if(shake>0)shake=Math.max(0,shake-0.8);
   timerTick++;if(timerTick>=60){timerTick=0;roundTimer--;}
   if(roundTimer<=0){endRound(true);return;}
