@@ -153,251 +153,296 @@ function makeFighter(charDef,x,facing){
   };
 }
 
-// ── WEAPON GEOMETRY ─────────────────────────────────────────────────────────
-// Returns {tip, base, angle} for weapon in world space given fighter
-function weaponInfo(f){
-  const atkPoses = ['punch','kick','special'];
-  const swinging = atkPoses.includes(f.state);
-  let angle=0;
-  if(f.weapon==='katana'){
-    angle = swinging ? f.facing*(-0.3) : f.facing*(0.4);
-    const bx=f.x+f.facing*10, by=f.y-54;
-    const len=72;
-    return {bx,by,tip:{x:bx+Math.sin(angle)*len,y:by-Math.cos(angle)*len},angle};
-  }
-  if(f.weapon==='hammer'){
-    angle = swinging ? f.facing*(0.9) : f.facing*(0.2);
-    const bx=f.x+f.facing*8, by=f.y-52;
-    const len=58;
-    return {bx,by,tip:{x:bx+Math.sin(angle)*len,y:by-Math.cos(angle)*len},angle};
-  }
-  if(f.weapon==='daggers'){
-    // dual daggers - just return primary
-    angle = swinging ? f.facing*(-0.5) : f.facing*(0.1);
-    const bx=f.x+f.facing*14, by=f.y-52;
-    const len=38;
-    return {bx,by,tip:{x:bx+Math.sin(angle)*len,y:by-Math.cos(angle)*len},angle};
-  }
-  // scythe
-  angle = swinging ? f.facing*(-0.6) : f.facing*(0.3);
-  const bx=f.x+f.facing*6, by=f.y-56;
-  const len=80;
-  return {bx,by,tip:{x:bx+Math.sin(angle)*len,y:by-Math.cos(angle)*len},angle};
-}
-
-// ── DRAW WEAPONS ─────────────────────────────────────────────────────────────
-function drawWeapon(f,glowing){
-  const swinging=['punch','kick','special'].includes(f.state);
-  ctx.save();
-  if(f.weapon==='katana') drawKatana(f,glowing,swinging);
-  else if(f.weapon==='hammer') drawHammer(f,glowing,swinging);
-  else if(f.weapon==='daggers') drawDaggers(f,glowing,swinging);
-  else drawScythe(f,glowing,swinging);
-  ctx.restore();
-}
-
-function drawKatana(f,glow,swing){
-  const wi=weaponInfo(f);
-  ctx.save();
-  ctx.translate(wi.bx,wi.by);
-  ctx.rotate(wi.angle);
-  // handle
-  ctx.fillStyle='#2a1a0a';
-  ctx.fillRect(-3,0,6,22);
-  // wrap
-  for(let i=0;i<4;i++){ctx.fillStyle=i%2?'#8b0000':'#600';ctx.fillRect(-3,i*5,6,3);}
-  // guard
-  ctx.fillStyle='#888';ctx.fillRect(-8,20,16,5);
-  // blade gradient
-  const bg=ctx.createLinearGradient(-2,24,2,24+72);
-  bg.addColorStop(0,'#e0e0e0');bg.addColorStop(0.6,'#ffffff');bg.addColorStop(1,'#aaccff');
-  ctx.fillStyle=bg;
-  ctx.beginPath();ctx.moveTo(-2.5,24);ctx.lineTo(2.5,24);ctx.lineTo(f.facing,96);ctx.lineTo(0,98);ctx.closePath();ctx.fill();
-  if(glow||swing){ctx.shadowColor=f.glow;ctx.shadowBlur=swing?18:8;ctx.strokeStyle=f.accent+'aa';ctx.lineWidth=1;ctx.stroke();}
-  ctx.restore();
-}
-
-function drawHammer(f,glow,swing){
-  const wi=weaponInfo(f);
-  ctx.save();
-  ctx.translate(wi.bx,wi.by);
-  ctx.rotate(wi.angle);
-  // pole
-  ctx.fillStyle='#4a2e10';ctx.fillRect(-4,0,8,70);
-  // metal bands
-  [15,35,55].forEach(y=>{ctx.fillStyle='#666';ctx.fillRect(-5,y,10,4);});
-  // head
-  const hg=ctx.createLinearGradient(-18,68,18,68);
-  hg.addColorStop(0,'#444');hg.addColorStop(0.5,'#888');hg.addColorStop(1,'#333');
-  ctx.fillStyle=hg;ctx.fillRect(-18,58,36,24);
-  // rivets
-  ctx.fillStyle='#aaa';[[-12,65],[0,65],[12,65],[-12,75],[0,75],[12,75]].forEach(([x,y])=>{ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill();});
-  if(glow||swing){ctx.shadowColor=f.glow;ctx.shadowBlur=swing?24:6;ctx.strokeStyle=f.accent;ctx.lineWidth=2;ctx.strokeRect(-18,58,36,24);}
-  ctx.restore();
-}
-
-function drawDaggers(f,glow,swing){
-  // draw two daggers
-  [-1,1].forEach((side,i)=>{
-    const wi=weaponInfo(f);
-    ctx.save();
-    ctx.translate(f.x+f.facing*(10+side*12), f.y-50);
-    const a = swing ? f.facing*(-0.6+side*0.3) : f.facing*(0.2+side*0.15);
-    ctx.rotate(a);
-    // handle
-    ctx.fillStyle='#1a1a2a';ctx.fillRect(-2.5,0,5,18);
-    ctx.fillStyle='#444';ctx.fillRect(-3.5,16,7,4);
-    // blade
-    const dg=ctx.createLinearGradient(-1.5,20,1.5,50);
-    dg.addColorStop(0,'#ccc');dg.addColorStop(1,'#eeffee');
-    ctx.fillStyle=dg;
-    ctx.beginPath();ctx.moveTo(-2,20);ctx.lineTo(2,20);ctx.lineTo(0.5,50);ctx.lineTo(0,52);ctx.closePath();ctx.fill();
-    if(glow||swing){ctx.shadowColor=f.glow;ctx.shadowBlur=swing?14:6;}
-    ctx.restore();
-  });
-}
-
-function drawScythe(f,glow,swing){
-  const wi=weaponInfo(f);
-  ctx.save();
-  ctx.translate(wi.bx,wi.by);
-  ctx.rotate(wi.angle);
-  // pole
-  const pg=ctx.createLinearGradient(-2,0,2,90);
-  pg.addColorStop(0,'#1a1a1a');pg.addColorStop(1,'#333');
-  ctx.fillStyle=pg;ctx.fillRect(-3,0,6,90);
-  // blade (curved)
-  ctx.save();
-  ctx.translate(f.facing*(-2),10);
-  const sg=ctx.createLinearGradient(0,0,f.facing*60,-30);
-  sg.addColorStop(0,'#220033');sg.addColorStop(0.4,'#9900cc');sg.addColorStop(1,'#dd44ff');
-  ctx.fillStyle=sg;
+// ── DRAW UTILS ───────────────────────────────────────────────────────────────
+// Capsule shape path between two points
+function cap(x1,y1,x2,y2,r){
+  const a=Math.atan2(y2-y1,x2-x1);
   ctx.beginPath();
-  ctx.moveTo(0,0);
-  ctx.bezierCurveTo(f.facing*20,-10,f.facing*55,-25,f.facing*62,-20);
-  ctx.bezierCurveTo(f.facing*55,-10,f.facing*30,5,f.facing*8,12);
-  ctx.closePath();ctx.fill();
-  if(glow||swing){ctx.shadowColor=f.glow;ctx.shadowBlur=swing?22:10;ctx.strokeStyle=f.accent+'88';ctx.lineWidth=1.5;ctx.stroke();}
-  ctx.restore();
-  ctx.restore();
+  ctx.arc(x1,y1,r,a+Math.PI/2,a-Math.PI/2,true);
+  ctx.arc(x2,y2,r,a-Math.PI/2,a+Math.PI/2,false);
+  ctx.closePath();
+}
+function circ(x,y,r){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.closePath();}
+
+// ── POSE SKELETON ────────────────────────────────────────────────────────────
+// Joint keys: h=head n=neck ch=chest pe=pelvis
+//   fs/fe/fw = front(weapon) shoulder/elbow/wrist
+//   bs/be/bw = back arm shoulder/elbow/wrist
+//   fh/fk/fa = front leg hip/knee/ankle
+//   bh/bk/ba = back leg hip/knee/ankle
+// Local space: x * facing → world x offset; y added directly to f.y (negative = up)
+const PK2=['h','n','ch','pe','fs','fe','fw','bs','be','bw','fh','fk','fa','bh','bk','ba'];
+function mkP(a){const p={};PK2.forEach((k,i)=>p[k]=[a[i*2],a[i*2+1]]);return p;}
+const POSES={
+  idle:    mkP([0,-88, 0,-74, 0,-63, 0,-42,  11,-68, 15,-53, 11,-40, -11,-68,-15,-53,-11,-40,   7,-42, 9,-22, 10, 0,  -7,-42, -9,-22,-11, 0]),
+  walk1:   mkP([2,-88, 1,-74, 0,-63, 0,-42,  13,-68,  9,-52,  5,-40, -13,-68, -9,-52, -5,-40,  10,-42,13,-22, 14, 0,  -8,-42, -5,-24,-10, 0]),
+  walk2:   mkP([-2,-88,-1,-74, 0,-63, 0,-42,  12,-68, 17,-53, 13,-40, -12,-68,-17,-53,-13,-40,   6,-42, 4,-24,  7, 0,  -9,-42,-13,-22,-14, 0]),
+  punch:   mkP([4,-88, 2,-74, 2,-63, 0,-42,  12,-67, 28,-61, 46,-56, -12,-68,-17,-56,-12,-46,   8,-42,10,-22, 10, 0,  -8,-42,-12,-22,-14, 0]),
+  kick:    mkP([3,-88, 2,-74, 1,-63, 0,-42,  12,-68, 14,-55, 10,-42, -12,-68,-16,-55,-11,-42,  11,-42,28,-28, 42,-14, -8,-42,-10,-22,-10, 0]),
+  block:   mkP([-2,-88,-1,-74,-1,-63, 0,-42,   8,-68,  4,-80, -2,-90,  -8,-68, -4,-78,  1,-86,   7,-42, 9,-22, 10, 0,  -7,-42, -9,-22,-11, 0]),
+  special: mkP([2,-88, 1,-74, 2,-63, 0,-42,  12,-67, 28,-63, 44,-59, -10,-67,-22,-63,-10,-60,   8,-42,10,-22, 10, 0,  -8,-42,-12,-22,-14, 0]),
+  hurt:    mkP([-6,-86,-4,-72,-3,-63, 0,-42,  -5,-66,-11,-52, -7,-40,   7,-66, 13,-52,  9,-40,   7,-42, 9,-22,  9, 0,  -7,-42, -9,-22, -9, 0]),
+  jump:    mkP([0,-88, 0,-74, 0,-63, 0,-42,  13,-68, 19,-55, 15,-42, -13,-68,-19,-55,-15,-42,  10,-42,15,-28, 11,-8, -10,-42,-15,-28,-11,-8]),
+  victory: mkP([0,-90, 0,-74, 0,-63, 0,-42,  12,-68, 16,-83, 10,-96, -12,-68,-16,-83,-10,-96,   7,-42, 9,-22, 10, 0,  -7,-42, -9,-22,-11, 0]),
+  dead:    mkP([26,-16,18,-14, 8,-18, 0,-12,  14,-26, 26,-18, 36,-8,  -6,-24,-18,-18,-28, -8,   8,-12,24, -6, 36,-2,  -8,-12,-24, -6,-36,-2]),
+};
+function getJ(f,pk){
+  const pose=POSES[pk]||POSES.idle, j={};
+  for(const [k,v] of Object.entries(pose)) j[k]=[f.x+v[0]*f.facing, f.y+v[1]];
+  return j;
+}
+function getPK(f){
+  if(f.state==='walk') return Math.floor(frameCount/8)%2?'walk1':'walk2';
+  return POSES[f.state]?f.state:'idle';
+}
+// Fake weaponInfo for trail compatibility
+function weaponInfo(f){
+  const j=getJ(f,getPK(f));
+  const wx=j.fw[0],wy=j.fw[1],ex=j.fe[0],ey=j.fe[1];
+  const dx=wx-ex,dy=wy-ey,len=Math.sqrt(dx*dx+dy*dy)||1;
+  const reach={katana:86,hammer:28,daggers:50,scythe:80}[f.weapon]||60;
+  return {tip:{x:wx+dx/len*reach,y:wy+dy/len*reach}};
 }
 
-// ── DRAW FIGHTER BODY ────────────────────────────────────────────────────────
+// ── DRAW FIGHTER ─────────────────────────────────────────────────────────────
 function drawFighter(f){
-  if(f.state==='dead' && Math.floor(frameCount/5)%2===0 && f.stateTimer>30) return;
-  const flash = f.hitCd>0 && Math.floor(frameCount/3)%2===0;
-  const x=f.x, y=f.y, dir=f.facing;
-  const dead=f.state==='dead', vic=f.state==='victory', block=f.state==='block';
-  const hurt=f.state==='hurt', swing=['punch','kick','special'].includes(f.state);
-  const walk=f.state==='walk', wf=Math.floor(frameCount/7)%2;
+  if(f.state==='dead'&&f.stateTimer>60&&Math.floor(frameCount/6)%2===0) return;
+  const j=getJ(f,getPK(f));
+  const flash=f.hitCd>0&&Math.floor(frameCount/3)%2===0;
+  const dead=f.state==='dead', special=f.state==='special';
+  const C1=f.body,C2=f.body2,CA=f.accent;
+
+  // Ground shadow
+  if(!dead){
+    ctx.fillStyle='rgba(0,0,0,0.28)';
+    circ(f.x,FLOOR+5,22); ctx.fill();
+  }
 
   ctx.save();
-  if(flash){ctx.filter='brightness(10) saturate(0)';}
-  if(dead){ctx.globalAlpha=0.55;}
+  if(flash) ctx.filter='brightness(7) saturate(0.2)';
+  if(dead) ctx.globalAlpha=0.6;
 
-  // Shadow on floor
-  ctx.restore();ctx.save();
-  ctx.fillStyle='rgba(0,0,0,0.35)';
-  ctx.beginPath();ctx.ellipse(x,FLOOR+6,28,7,0,0,Math.PI*2);ctx.fill();
-  if(flash)ctx.filter='brightness(10) saturate(0)';
-  if(dead)ctx.globalAlpha=0.55;
-
-  const C1=f.body, C2=f.body2, CA=f.accent;
-
-  // Boots
-  if(!dead){
-    ctx.fillStyle='#222';
-    if(swing&&f.state==='kick'){ctx.fillRect(x+dir*18,y-14,16,14);}
-    else{ctx.fillRect(x-16,y-14,14,14);ctx.fillRect(x+2,y-14,14,14);}
-  }else{
-    ctx.fillStyle='#222';ctx.fillRect(x+24,y-12,14,12);ctx.fillRect(x-38,y-12,14,12);
-  }
-
-  // Legs
+  // ── BACK LEG (dimmed for depth) ──
+  ctx.globalAlpha*=0.68;
   ctx.fillStyle=C1;
-  if(dead){
-    ctx.fillRect(x+8,y-32,32,18);ctx.fillRect(x-40,y-32,32,18);
-  }else if(swing&&f.state==='kick'){
-    ctx.fillRect(x-16,y-42,14,28);
-    // Kick leg
-    ctx.fillRect(x+dir*4,y-38,14,18);
-    ctx.fillRect(x+dir*18,y-44,22,14);
-  }else if(walk){
-    const a=wf?1:-1;
-    ctx.fillRect(x-16,y-42+(a>0?0:8),14,28-(a>0?0:8));
-    ctx.fillRect(x+2,y-42+(a<0?0:8),14,28-(a<0?0:8));
-    ctx.fillRect(x-16,y-14+(a>0?-8:0),14,10);
-    ctx.fillRect(x+2,y-14+(a<0?-8:0),14,10);
-  }else{
-    ctx.fillRect(x-16,y-42,14,28);ctx.fillRect(x+2,y-42,14,28);
-  }
+  cap(j.bh[0],j.bh[1],j.bk[0],j.bk[1],8); ctx.fill();
+  cap(j.bk[0],j.bk[1],j.ba[0],j.ba[1],7.5); ctx.fill();
+  // knee cap back
+  ctx.fillStyle=CA+'44'; circ(j.bk[0],j.bk[1],7); ctx.fill();
+  // back boot
+  ctx.fillStyle='#2a2020';
+  ctx.beginPath();ctx.ellipse(j.ba[0]+f.facing*5,j.ba[1]-3,10,5.5,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=dead?0.6:1;
 
-  // Belt
-  ctx.fillStyle='#1a1a1a';ctx.fillRect(x-18,y-46,36,6);
-  ctx.fillStyle=CA;ctx.fillRect(x-4,y-46,8,6);
-
-  // Torso
-  const tg=ctx.createLinearGradient(x-18,y-82,x+18,y-46);
-  tg.addColorStop(0,C2);tg.addColorStop(1,C1);
-  ctx.fillStyle=tg;ctx.fillRect(x-18,y-82,36,36);
-
-  // Armor details
-  ctx.fillStyle=CA+'55';ctx.fillRect(x-18,y-82,36,4); // shoulder plate
-  ctx.fillStyle=CA+'33';ctx.fillRect(x-2,y-80,4,30); // center stripe
-
-  // Arms
+  // ── BACK ARM (dimmed) ──
+  ctx.globalAlpha*=0.68;
   ctx.fillStyle=C2;
-  if(dead){
-    ctx.fillRect(x+18,y-76,30,12);ctx.fillRect(x-48,y-76,30,12);
-  }else if(block){
-    ctx.fillRect(x+dir*2,y-80,dir*28,12);ctx.fillRect(x+dir*2,y-66,dir*28,12);
-  }else if(swing&&f.state==='punch'){
-    ctx.fillRect(x+dir*18,y-76,dir*30,12);
-    ctx.fillRect(x-dir*18,y-66,dir*18,12);
-  }else if(swing&&f.state==='special'){
-    ctx.fillStyle=CA;
-    ctx.fillRect(x+dir*16,y-78,dir*32,14);
-    ctx.fillRect(x-dir*16,y-64,dir*20,12);
-    // glow arms
-    ctx.shadowColor=f.glow;ctx.shadowBlur=16;
-    ctx.fillRect(x+dir*16,y-78,dir*32,14);
-    ctx.shadowBlur=0;
-  }else if(hurt){
-    ctx.fillRect(x-dir*22,y-78,dir*20,12);ctx.fillRect(x+dir*8,y-64,dir*22,12);
-  }else{
-    ctx.fillRect(x-dir*16,y-78,dir*18,12);ctx.fillRect(x+dir*14,y-64,dir*18,12);
-  }
+  cap(j.bs[0],j.bs[1],j.be[0],j.be[1],6.5); ctx.fill();
+  cap(j.be[0],j.be[1],j.bw[0],j.bw[1],5.5); ctx.fill();
+  ctx.fillStyle=C2; circ(j.bw[0],j.bw[1],7); ctx.fill();
+  ctx.globalAlpha=dead?0.6:1;
 
-  // Head
-  const hg2=ctx.createRadialGradient(x-dir*2,y-92,2,x,y-90,16);
-  hg2.addColorStop(0,C2);hg2.addColorStop(1,C1);
-  ctx.fillStyle=hg2;ctx.shadowColor=C1;ctx.shadowBlur=4;
-  ctx.beginPath();ctx.ellipse(x,y-90,15,18,0,0,Math.PI*2);ctx.fill();
+  // ── TORSO ──
+  // Neck
+  ctx.fillStyle=C2; cap(j.n[0],j.n[1],j.ch[0],j.ch[1]-6,5.5); ctx.fill();
+  // Torso body as polygon (tapered shape)
+  const tg=ctx.createLinearGradient(j.ch[0],j.ch[1],j.pe[0],j.pe[1]);
+  tg.addColorStop(0,C2); tg.addColorStop(1,C1);
+  ctx.fillStyle=tg;
+  ctx.beginPath();
+  ctx.moveTo(j.bs[0],j.bs[1]);
+  ctx.quadraticCurveTo(j.bs[0]+f.facing*-2,j.ch[1]+4,j.bh[0]+f.facing*3,j.bh[1]);
+  ctx.lineTo(j.fh[0]-f.facing*3,j.fh[1]);
+  ctx.quadraticCurveTo(j.fs[0]+f.facing*2,j.ch[1]+4,j.fs[0],j.fs[1]);
+  ctx.closePath(); ctx.fill();
+  // Chest center stripe
+  ctx.fillStyle=CA+'33';
+  cap(j.ch[0],j.ch[1],j.pe[0],j.pe[1],3.5); ctx.fill();
+  // Shoulder armor pads
+  ctx.shadowColor=CA; ctx.shadowBlur=5;
+  ctx.fillStyle=CA+'88'; circ(j.fs[0],j.fs[1],10); ctx.fill();
+  ctx.globalAlpha*=0.65; circ(j.bs[0],j.bs[1],9); ctx.fill();
+  ctx.globalAlpha=dead?0.6:1; ctx.shadowBlur=0;
+  // Belt buckle
+  ctx.fillStyle='#181418'; cap(j.pe[0]-8,j.pe[1],j.pe[0]+8,j.pe[1],5); ctx.fill();
+  ctx.fillStyle=CA; circ(j.pe[0],j.pe[1],4); ctx.fill();
+
+  // ── FRONT LEG ──
+  ctx.fillStyle=C1;
+  cap(j.fh[0],j.fh[1],j.fk[0],j.fk[1],9); ctx.fill();
+  cap(j.fk[0],j.fk[1],j.fa[0],j.fa[1],7.5); ctx.fill();
+  // Knee guard
+  ctx.fillStyle=CA+'55'; circ(j.fk[0],j.fk[1],8); ctx.fill();
+  // Front boot with toe detail
+  ctx.fillStyle='#333';
+  ctx.beginPath();ctx.ellipse(j.fa[0]+f.facing*5,j.fa[1]-3,12,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=CA+'66';
+  ctx.beginPath();ctx.ellipse(j.fa[0]+f.facing*7,j.fa[1]-5,5,3,0,0,Math.PI*2);ctx.fill();
+
+  // ── HEAD ──
+  drawHead(f,j,C1,C2,CA);
+
+  // ── FRONT ARM ──
+  ctx.fillStyle=C2;
+  cap(j.fs[0],j.fs[1],j.fe[0],j.fe[1],7); ctx.fill();
+  // elbow guard
+  ctx.fillStyle=CA+'55'; circ(j.fe[0],j.fe[1],6.5); ctx.fill();
+  ctx.fillStyle=C2;
+  cap(j.fe[0],j.fe[1],j.fw[0],j.fw[1],5.5); ctx.fill();
+  // Gauntlet / fist
+  if(special){ctx.shadowColor=CA;ctx.shadowBlur=22;}
+  ctx.fillStyle=special?CA:C2; circ(j.fw[0],j.fw[1],8.5); ctx.fill();
+  ctx.strokeStyle=CA+'66'; ctx.lineWidth=2; circ(j.fw[0],j.fw[1],8.5); ctx.stroke();
   ctx.shadowBlur=0;
 
-  // Helmet/mask details
-  ctx.fillStyle=CA+'aa';ctx.fillRect(x-15,y-104,30,8); // helmet top
-  ctx.fillRect(x-15,y-96,5,6);ctx.fillRect(x+10,y-96,5,6); // cheek guards
+  ctx.restore();
 
-  // Eyes
-  ctx.fillStyle='#000';ctx.fillRect(x+dir*2-4,y-94,6,5);
-  ctx.fillStyle=f.glow;ctx.shadowColor=f.glow;ctx.shadowBlur=8;
-  ctx.fillRect(x+dir*2-3,y-93,4,3);
-  ctx.shadowBlur=0;
-
-  // Victory pose arms up
-  if(vic){ctx.fillStyle=C2;ctx.fillRect(x-28,y-96,12,26);ctx.fillRect(x+16,y-96,12,26);}
-
-  // Name tag
-  ctx.fillStyle='#ffffff66';ctx.font='bold 9px Courier New';ctx.textAlign='center';
-  ctx.shadowBlur=0;ctx.filter='none';ctx.globalAlpha=1;
-  ctx.fillText(f.name,x,y-112);
+  // Name
+  ctx.fillStyle='#ffffff44'; ctx.font='bold 9px Courier New'; ctx.textAlign='center';
+  ctx.fillText(f.name,f.x,f.y-112);
   ctx.textAlign='left';
 
-  ctx.restore();
+  // Weapon drawn on top
+  if(f.state!=='dead') drawWeaponAt(f,j);
+}
 
-  // Draw weapon on top
-  drawWeapon(f, swing);
+function drawHead(f,j,C1,C2,CA){
+  const hx=j.h[0],hy=j.h[1],dir=f.facing;
+  // Head sphere with radial gradient
+  const hg=ctx.createRadialGradient(hx-dir*3,hy-3,2,hx,hy,15);
+  hg.addColorStop(0,C2); hg.addColorStop(1,C1);
+  ctx.fillStyle=hg; circ(hx,hy,14); ctx.fill();
+  // Helmet top half
+  ctx.fillStyle=CA; ctx.shadowColor=CA; ctx.shadowBlur=7;
+  ctx.beginPath(); ctx.arc(hx,hy,14,Math.PI,0); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur=0;
+  // Visor bar
+  ctx.fillStyle='#000a'; ctx.fillRect(hx-13,hy-1,26,7);
+  ctx.strokeStyle=CA+'cc'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(hx-13,hy); ctx.lineTo(hx+13,hy); ctx.stroke();
+  // Glowing eyes
+  const ex=hx+dir*3;
+  ctx.fillStyle=f.glow; ctx.shadowColor=f.glow; ctx.shadowBlur=14;
+  ctx.beginPath(); ctx.ellipse(ex,hy+3,4,2.5,0,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  // Cheek plates
+  ctx.fillStyle=CA+'77';
+  ctx.fillRect(hx-14,hy+2,4,8); ctx.fillRect(hx+10,hy+2,4,8);
+  // Chin and jaw
+  ctx.fillStyle=C1+'cc';
+  ctx.beginPath(); ctx.ellipse(hx,hy+12,9,5,0,0,Math.PI*2); ctx.fill();
+  // Mouth expression
+  ctx.strokeStyle='#000a'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  if(f.state==='hurt'||f.state==='dead'){ctx.arc(hx+dir,hy+9,3.5,0,Math.PI);}
+  else if(f.state==='victory'){ctx.arc(hx+dir,hy+8,3,Math.PI*1.15,Math.PI*1.85);}
+  else{ctx.moveTo(hx+dir-3,hy+9);ctx.lineTo(hx+dir+3,hy+9);}
+  ctx.stroke();
+}
+
+// ── WEAPON DRAWING (joint-anchored) ─────────────────────────────────────────
+function drawWeaponAt(f,j){
+  const wx=j.fw[0],wy=j.fw[1],ex=j.fe[0],ey=j.fe[1];
+  const dx=wx-ex,dy=wy-ey,len=Math.sqrt(dx*dx+dy*dy)||1;
+  const ux=dx/len,uy=dy/len,px=-uy,py=ux;
+  const swing=['punch','kick','special'].includes(f.state);
+  ctx.save();
+  if(swing){ctx.shadowColor=f.glow;ctx.shadowBlur=18;}
+
+  if(f.weapon==='katana'){
+    // Handle (behind wrist toward elbow)
+    const h0x=wx-ux*5,h0y=wy-uy*5, h1x=wx+ux*22,h1y=wy+uy*22;
+    ctx.fillStyle='#2a1505'; cap(h0x,h0y,h1x,h1y,3.5); ctx.fill();
+    // Leather wrap
+    ctx.strokeStyle='#8b0000'; ctx.lineWidth=3;
+    for(let i=0;i<4;i++){const t=i/3.5,bx=h0x+(h1x-h0x)*t,by=h0y+(h1y-h0y)*t;ctx.beginPath();ctx.moveTo(bx+px*3.5,by+py*3.5);ctx.lineTo(bx-px*3.5,by-py*3.5);ctx.stroke();}
+    // Guard
+    ctx.fillStyle='#888'; cap(h1x+px*9,h1y+py*9,h1x-px*9,h1y-py*9,3); ctx.fill();
+    ctx.fillStyle='#aaa'; cap(h1x+px*8,h1y+py*8,h1x-px*8,h1y-py*8,2); ctx.fill();
+    // Blade (tapered)
+    const tipx=wx+ux*88,tipy=wy+uy*88;
+    const bg=ctx.createLinearGradient(h1x,h1y,tipx,tipy);
+    bg.addColorStop(0,'#d8d8d8'); bg.addColorStop(0.65,'#ffffff'); bg.addColorStop(1,'#aaccff');
+    ctx.fillStyle=bg;
+    ctx.beginPath();
+    ctx.moveTo(h1x+px*3.2,h1y+py*3.2); ctx.lineTo(h1x-px*3.2,h1y-py*3.2);
+    ctx.lineTo(tipx+px*0.5,tipy+py*0.5); ctx.lineTo(tipx,tipy); ctx.closePath(); ctx.fill();
+    if(swing){ctx.strokeStyle=f.accent+'99';ctx.lineWidth=1;ctx.stroke();}
+    // Blood groove
+    ctx.strokeStyle='#aaaadd55'; ctx.lineWidth=0.8;
+    ctx.beginPath();ctx.moveTo(h1x,h1y);ctx.lineTo(tipx-ux*8,tipy-uy*8);ctx.stroke();
+
+  }else if(f.weapon==='hammer'){
+    // Both hands grip - use front and back wrist
+    const bwx=j.bw[0],bwy=j.bw[1];
+    // Handle between wrists
+    ctx.fillStyle='#5a3810'; cap(wx-ux*6,wy-uy*6,bwx+0,bwy+0,4.5); ctx.fill();
+    ctx.strokeStyle='#888'; ctx.lineWidth=2.5;
+    [0.3,0.65].forEach(t=>{const bx=wx+(bwx-wx)*t,by=wy+(bwy-wy)*t;ctx.beginPath();ctx.moveTo(bx+px*5,by+py*5);ctx.lineTo(bx-px*5,by-py*5);ctx.stroke();});
+    // Hammer head perpendicular at front wrist
+    const hg=ctx.createLinearGradient(wx+px*22,wy+py*22,wx-px*22,wy-py*22);
+    hg.addColorStop(0,'#3a3a3a'); hg.addColorStop(0.4,'#aaaaaa'); hg.addColorStop(1,'#2a2a2a');
+    ctx.fillStyle=hg;
+    cap(wx+ux*16+px*22,wy+uy*16+py*22,wx-ux*16+px*22,wy-uy*16+py*22,14); ctx.fill();
+    // Edge highlight
+    ctx.strokeStyle='#ccc8'; ctx.lineWidth=2;
+    cap(wx+ux*16+px*22,wy+uy*16+py*22,wx-ux*16+px*22,wy-uy*16+py*22,14); ctx.stroke();
+    // Rivets
+    ctx.fillStyle='#ddd';
+    [[-10,0],[0,0],[10,0]].forEach(([ox])=>{circ(wx+ux*ox+px*22,wy+uy*ox+py*22,3);ctx.fill();});
+    if(swing){ctx.strokeStyle=f.accent;ctx.lineWidth=2.5;
+    cap(wx+ux*16+px*22,wy+uy*16+py*22,wx-ux*16+px*22,wy-uy*16+py*22,14); ctx.stroke();}
+
+  }else if(f.weapon==='daggers'){
+    drawDagger(wx,wy,ux,uy,px,py,f,swing);
+    const bwx=j.bw[0],bwy=j.bw[1],bdx=bwx-j.be[0],bdy=bwy-j.be[1];
+    const bl=Math.sqrt(bdx*bdx+bdy*bdy)||1,bux=bdx/bl,buy=bdy/bl,bpx=-buy,bpy=bux;
+    drawDagger(bwx,bwy,bux,buy,bpx,bpy,f,false);
+
+  }else{ // scythe
+    // Pole: from wrist, extends upward-backward using perpendicular
+    const tipx=wx-ux*12+py*82,tipy=wy-uy*12-px*82;
+    const pg=ctx.createLinearGradient(wx,wy,tipx,tipy);
+    pg.addColorStop(0,'#1a1828'); pg.addColorStop(1,'#3a384a');
+    ctx.fillStyle=pg; cap(wx,wy,tipx,tipy,3.5); ctx.fill();
+    // Curved blade at pole tip
+    const sg=ctx.createLinearGradient(tipx,tipy,tipx+f.facing*70,tipy-28);
+    sg.addColorStop(0,'#330044'); sg.addColorStop(0.45,'#9900bb'); sg.addColorStop(1,'#ff44ee');
+    ctx.fillStyle=sg;
+    ctx.beginPath();
+    ctx.moveTo(tipx,tipy);
+    ctx.bezierCurveTo(tipx+f.facing*22,tipy-15,tipx+f.facing*58,tipy-30,tipx+f.facing*74,tipy-20);
+    ctx.bezierCurveTo(tipx+f.facing*58,tipy-8,tipx+f.facing*26,tipy+10,tipx+f.facing*6,tipy+13);
+    ctx.closePath(); ctx.fill();
+    // Inner highlight
+    ctx.strokeStyle=f.accent+'66'; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    ctx.moveTo(tipx+f.facing*4,tipy+4);
+    ctx.bezierCurveTo(tipx+f.facing*20,tipy-10,tipx+f.facing*52,tipy-24,tipx+f.facing*68,tipy-16);
+    ctx.stroke();
+    if(swing){ctx.strokeStyle=f.accent+'aa';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(tipx,tipy);ctx.bezierCurveTo(tipx+f.facing*22,tipy-15,tipx+f.facing*58,tipy-30,tipx+f.facing*74,tipy-20);ctx.bezierCurveTo(tipx+f.facing*58,tipy-8,tipx+f.facing*26,tipy+10,tipx+f.facing*6,tipy+13);ctx.closePath();ctx.stroke();}
+  }
+  ctx.restore();
+}
+
+function drawDagger(wx,wy,ux,uy,px,py,f,swing){
+  ctx.fillStyle='#1a1520'; cap(wx,wy,wx+ux*18,wy+uy*18,3.2); ctx.fill();
+  // wrap
+  ctx.strokeStyle='#555'; ctx.lineWidth=2;
+  for(let i=0;i<3;i++){const t=i/2.5,bx=wx+ux*18*t,by=wy+uy*18*t;ctx.beginPath();ctx.moveTo(bx+px*3,by+py*3);ctx.lineTo(bx-px*3,by-py*3);ctx.stroke();}
+  // Crossguard
+  ctx.fillStyle='#666'; cap(wx+ux*16-px*7,wy+uy*16-py*7,wx+ux*16+px*7,wy+uy*16+py*7,2.8); ctx.fill();
+  // Blade
+  const tipx=wx+ux*52,tipy=wy+uy*52;
+  const dg=ctx.createLinearGradient(wx+ux*18,wy+uy*18,tipx,tipy);
+  dg.addColorStop(0,'#bbb'); dg.addColorStop(1,'#d8ffda');
+  ctx.fillStyle=dg;
+  ctx.beginPath();
+  ctx.moveTo(wx+ux*18+px*2.8,wy+uy*18+py*2.8);
+  ctx.lineTo(wx+ux*18-px*2.8,wy+uy*18-py*2.8);
+  ctx.lineTo(tipx,tipy); ctx.closePath(); ctx.fill();
+  if(swing){ctx.strokeStyle=f.accent+'aa';ctx.lineWidth=1;ctx.stroke();}
 }
 
 // ── WEAPON TRAIL ─────────────────────────────────────────────────────────────
@@ -405,11 +450,9 @@ function updateTrail(f){
   const swing=['punch','kick','special'].includes(f.state);
   if(swing){
     const wi=weaponInfo(f);
-    f.trailBuf.push({x:wi.tip.x,y:wi.tip.y,t:frameCount});
-  } else {
-    f.trailBuf=[];
-  }
-  if(f.trailBuf.length>10)f.trailBuf.shift();
+    f.trailBuf.push({x:wi.tip.x,y:wi.tip.y});
+  } else { f.trailBuf=[]; }
+  if(f.trailBuf.length>12)f.trailBuf.shift();
 }
 
 function drawTrail(f){
@@ -417,8 +460,8 @@ function drawTrail(f){
   ctx.save();
   for(let i=1;i<f.trailBuf.length;i++){
     const a=i/f.trailBuf.length;
-    ctx.strokeStyle=f.accent;ctx.globalAlpha=a*0.6;ctx.lineWidth=a*5;
-    ctx.shadowColor=f.glow;ctx.shadowBlur=12*a;
+    ctx.strokeStyle=f.accent;ctx.globalAlpha=a*0.55;ctx.lineWidth=a*7;
+    ctx.shadowColor=f.glow;ctx.shadowBlur=16*a;
     ctx.beginPath();
     ctx.moveTo(f.trailBuf[i-1].x,f.trailBuf[i-1].y);
     ctx.lineTo(f.trailBuf[i].x,f.trailBuf[i].y);
@@ -849,56 +892,116 @@ function hideAllScreens(){
 
 // ── CHARACTER SELECT ──────────────────────────────────────────────────────────
 function drawCharPreview(charDef,canvas){
-  const ctx2=canvas.getContext('2d');
-  ctx2.clearRect(0,0,canvas.width,canvas.height);
-  // mini background
-  const bg=ctx2.createLinearGradient(0,0,0,canvas.height);
-  bg.addColorStop(0,'#0a0015');bg.addColorStop(1,'#1a0030');
-  ctx2.fillStyle=bg;ctx2.fillRect(0,0,canvas.width,canvas.height);
-  ctx2.strokeStyle=charDef.glow+'44';ctx2.lineWidth=1;ctx2.strokeRect(0,0,canvas.width,canvas.height);
+  const c2=canvas.getContext('2d');
+  const cw=canvas.width, ch2=canvas.height;
+  c2.clearRect(0,0,cw,ch2);
+  const bg=c2.createLinearGradient(0,0,0,ch2);
+  bg.addColorStop(0,'#080012');bg.addColorStop(1,'#160028');
+  c2.fillStyle=bg;c2.fillRect(0,0,cw,ch2);
+  c2.strokeStyle=charDef.glow+'33';c2.lineWidth=1;c2.strokeRect(0,0,cw,ch2);
 
-  // draw simplified fighter in preview
-  const cx=canvas.width/2, cy=canvas.height-8;
+  const cx=cw/2, fy=ch2-6;
   const C1=charDef.body,C2=charDef.body2,CA=charDef.accent;
-  // shadow
-  ctx2.fillStyle='rgba(0,0,0,0.4)';ctx2.beginPath();ctx2.ellipse(cx,cy-2,18,4,0,Math.PI*2,0);ctx2.fill();
-  // legs
-  ctx2.fillStyle=C1;ctx2.fillRect(cx-11,cy-30,9,20);ctx2.fillRect(cx+2,cy-30,9,20);
-  ctx2.fillStyle='#222';ctx2.fillRect(cx-11,cy-12,10,12);ctx2.fillRect(cx+1,cy-12,10,12);
-  // torso
-  const tg2=ctx2.createLinearGradient(cx-13,cy-60,cx+13,cy-30);
-  tg2.addColorStop(0,C2);tg2.addColorStop(1,C1);
-  ctx2.fillStyle=tg2;ctx2.fillRect(cx-13,cy-60,26,30);
-  ctx2.fillStyle=CA+'55';ctx2.fillRect(cx-13,cy-60,26,4);
-  // arms
-  ctx2.fillStyle=C2;ctx2.fillRect(cx-24,cy-58,12,9);ctx2.fillRect(cx+12,cy-48,12,9);
-  // head
-  const hg3=ctx2.createRadialGradient(cx-2,cy-70,2,cx,cy-68,12);
-  hg3.addColorStop(0,C2);hg3.addColorStop(1,C1);
-  ctx2.fillStyle=hg3;ctx2.beginPath();ctx2.ellipse(cx,cy-68,11,13,0,0,Math.PI*2);ctx2.fill();
-  ctx2.fillStyle=CA+'aa';ctx2.fillRect(cx-11,cy-79,22,6);
-  ctx2.fillStyle=charDef.glow;ctx2.shadowColor=charDef.glow;ctx2.shadowBlur=6;
-  ctx2.fillRect(cx+1,cy-71,3,3);ctx2.shadowBlur=0;
-  // weapon preview
-  ctx2.save();ctx2.translate(cx+10,cy-52);
-  if(charDef.weapon==='katana'){
-    ctx2.fillStyle='#666';ctx2.fillRect(-2,0,4,14);
-    ctx2.fillStyle='#eee';ctx2.beginPath();ctx2.moveTo(-2,14);ctx2.lineTo(2,14);ctx2.lineTo(1,55);ctx2.lineTo(0,57);ctx2.closePath();ctx2.fill();
-    ctx2.shadowColor=charDef.glow;ctx2.shadowBlur=8;ctx2.stroke();
-  }else if(charDef.weapon==='hammer'){
-    ctx2.fillStyle='#4a2e10';ctx2.fillRect(-2,0,4,42);
-    ctx2.fillStyle='#666';ctx2.fillRect(-11,36,22,15);
-  }else if(charDef.weapon==='daggers'){
-    [-10,8].forEach(ox=>{ctx2.fillStyle='#333';ctx2.fillRect(ox,0,3,11);ctx2.fillStyle='#ccc';ctx2.beginPath();ctx2.moveTo(ox,11);ctx2.lineTo(ox+3,11);ctx2.lineTo(ox+1.5,32);ctx2.closePath();ctx2.fill();});
-  }else{
-    ctx2.fillStyle='#333';ctx2.fillRect(-1,0,3,54);
-    ctx2.fillStyle=charDef.accent;ctx2.shadowColor=charDef.glow;ctx2.shadowBlur=10;
-    ctx2.beginPath();ctx2.moveTo(0,8);ctx2.bezierCurveTo(16,-5,42,-18,46,-14);ctx2.bezierCurveTo(40,-6,20,4,6,10);ctx2.closePath();ctx2.fill();
+
+  function c2cap(x1,y1,x2,y2,r){
+    const a=Math.atan2(y2-y1,x2-x1);
+    c2.beginPath();c2.arc(x1,y1,r,a+Math.PI/2,a-Math.PI/2,true);c2.arc(x2,y2,r,a-Math.PI/2,a+Math.PI/2,false);c2.closePath();
   }
-  ctx2.restore();
-  // glow ring
-  ctx2.strokeStyle=charDef.glow+'66';ctx2.lineWidth=2;ctx2.shadowColor=charDef.glow;ctx2.shadowBlur=14;
-  ctx2.beginPath();ctx2.ellipse(cx,cy-40,22,36,0,0,Math.PI*2);ctx2.stroke();ctx2.shadowBlur=0;
+  function c2circ(x,y,r){c2.beginPath();c2.arc(x,y,r,0,Math.PI*2);c2.closePath();}
+
+  // Shadow
+  c2.fillStyle='rgba(0,0,0,0.35)';c2circ(cx,fy-3,16);c2.fill();
+
+  // Back leg
+  c2.globalAlpha=0.55; c2.fillStyle=C1;
+  c2cap(cx+4,fy-28,cx+6,fy-14,6.5);c2.fill();c2cap(cx+6,fy-14,cx+7,fy,5.5);c2.fill();
+  c2.fillStyle='#2a2020';c2.beginPath();c2.ellipse(cx+10,fy-3,8,4.5,0,0,Math.PI*2);c2.fill();
+  c2.globalAlpha=1;
+
+  // Back arm
+  c2.globalAlpha=0.55; c2.fillStyle=C2;
+  c2cap(cx+8,fy-48,cx+14,fy-36,5);c2.fill();c2cap(cx+14,fy-36,cx+10,fy-26,4.5);c2.fill();
+  c2.globalAlpha=1;
+
+  // Torso
+  c2.fillStyle=C2;c2cap(cx,fy-54,cx,fy-48,4.5);c2.fill(); // neck
+  const tg=c2.createLinearGradient(cx,fy-50,cx,fy-28);
+  tg.addColorStop(0,C2);tg.addColorStop(1,C1);
+  c2.fillStyle=tg;
+  c2.beginPath();c2.moveTo(cx-10,fy-48);c2.quadraticCurveTo(cx-12,fy-38,cx-8,fy-28);c2.lineTo(cx+7,fy-28);c2.quadraticCurveTo(cx+12,fy-38,cx+10,fy-48);c2.closePath();c2.fill();
+  c2.fillStyle=CA+'55';c2cap(cx,fy-48,cx,fy-28,3);c2.fill(); // stripe
+  // shoulder pads
+  c2.shadowColor=CA;c2.shadowBlur=4;
+  c2.fillStyle=CA+'88';c2circ(cx+10,fy-48,8);c2.fill();
+  c2.globalAlpha=0.5;c2circ(cx-10,fy-48,7);c2.fill();c2.globalAlpha=1;c2.shadowBlur=0;
+  // belt
+  c2.fillStyle='#181418';c2cap(cx-6,fy-28,cx+6,fy-28,4);c2.fill();
+  c2.fillStyle=CA;c2circ(cx,fy-28,3);c2.fill();
+
+  // Front leg
+  c2.fillStyle=C1;
+  c2cap(cx-4,fy-28,cx-7,fy-14,7.5);c2.fill();c2cap(cx-7,fy-14,cx-8,fy,6.5);c2.fill();
+  c2.fillStyle=CA+'44';c2circ(cx-7,fy-14,6.5);c2.fill();
+  c2.fillStyle='#333';c2.beginPath();c2.ellipse(cx-11,fy-3,9,5,0,0,Math.PI*2);c2.fill();
+
+  // Head
+  const hg=c2.createRadialGradient(cx+2,fy-66,2,cx,fy-64,11);
+  hg.addColorStop(0,C2);hg.addColorStop(1,C1);
+  c2.fillStyle=hg;c2circ(cx,fy-64,11);c2.fill();
+  c2.fillStyle=CA;c2.shadowColor=CA;c2.shadowBlur=6;
+  c2.beginPath();c2.arc(cx,fy-64,11,Math.PI,0);c2.closePath();c2.fill();c2.shadowBlur=0;
+  c2.fillStyle='#000a';c2.fillRect(cx-10,fy-65,20,5);
+  c2.fillStyle=charDef.glow;c2.shadowColor=charDef.glow;c2.shadowBlur=10;
+  c2.beginPath();c2.ellipse(cx+2,fy-63,3.5,2,0,0,Math.PI*2);c2.fill();c2.shadowBlur=0;
+  c2.fillStyle=CA+'66';c2.fillRect(cx-11,fy-65,3,7);c2.fillRect(cx+8,fy-65,3,7);
+
+  // Front arm
+  c2.fillStyle=C2;
+  c2cap(cx+10,fy-48,cx+16,fy-37,5.5);c2.fill();c2cap(cx+16,fy-37,cx+12,fy-27,4.5);c2.fill();
+  c2circ(cx+12,fy-27,6.5);c2.fill();
+
+  // Weapon preview
+  const wx=cx+12,wy=fy-27,ax=cx+16,ay=fy-37;
+  const ddx=wx-ax,ddy=wy-ay,dl=Math.sqrt(ddx*ddx+ddy*ddy)||1;
+  const dux=ddx/dl,duy=ddy/dl,dpx=-duy,dpy=dux;
+  c2.save();
+  if(charDef.weapon==='katana'){
+    const h0x=wx-dux*3,h0y=wy-duy*3,h1x=wx+dux*16,h1y=wy+duy*16;
+    c2.fillStyle='#2a1505';c2cap(h0x,h0y,h1x,h1y,2.8);c2.fill();
+    c2.fillStyle='#777';c2cap(h1x+dpx*7,h1y+dpy*7,h1x-dpx*7,h1y-dpy*7,2.5);c2.fill();
+    const tipx=wx+dux*64,tipy=wy+duy*64;
+    const bg2=c2.createLinearGradient(h1x,h1y,tipx,tipy);
+    bg2.addColorStop(0,'#d8d8d8');bg2.addColorStop(1,'#aaccff');c2.fillStyle=bg2;
+    c2.beginPath();c2.moveTo(h1x+dpx*2.5,h1y+dpy*2.5);c2.lineTo(h1x-dpx*2.5,h1y-dpy*2.5);c2.lineTo(tipx,tipy);c2.closePath();c2.fill();
+    c2.shadowColor=charDef.glow;c2.shadowBlur=8;c2.strokeStyle=charDef.accent+'88';c2.lineWidth=0.8;c2.stroke();
+  }else if(charDef.weapon==='hammer'){
+    c2.fillStyle='#5a3810';c2cap(wx,wy,wx+dux*10,wy+duy*10,3.5);c2.fill();
+    const hg3=c2.createLinearGradient(wx+dpx*14,wy+dpy*14,wx-dpx*14,wy-dpy*14);
+    hg3.addColorStop(0,'#3a3a3a');hg3.addColorStop(0.5,'#aaa');hg3.addColorStop(1,'#2a2a2a');
+    c2.fillStyle=hg3;c2cap(wx+dux*12+dpx*14,wy+duy*12+dpy*14,wx-dux*12+dpx*14,wy-duy*12+dpy*14,11);c2.fill();
+    c2.shadowColor=charDef.glow;c2.shadowBlur=10;c2.strokeStyle=charDef.accent;c2.lineWidth=1.5;c2.stroke();
+  }else if(charDef.weapon==='daggers'){
+    [[wx,wy,dux,duy,dpx,dpy],[cx-12,fy-32,-dux,-duy,-dpx,-dpy]].forEach(([x,y,ux2,uy2,px2,py2])=>{
+      c2.fillStyle='#1a1520';c2cap(x,y,x+ux2*13,y+uy2*13,2.5);c2.fill();
+      c2.fillStyle='#555';c2cap(x+ux2*11-px2*5,y+uy2*11-py2*5,x+ux2*11+px2*5,y+uy2*11+py2*5,2);c2.fill();
+      const t=[x+ux2*40,y+uy2*40];
+      const d3=c2.createLinearGradient(x+ux2*13,y+uy2*13,t[0],t[1]);d3.addColorStop(0,'#bbb');d3.addColorStop(1,'#d8ffda');
+      c2.fillStyle=d3;c2.beginPath();c2.moveTo(x+ux2*13+px2*2,y+uy2*13+py2*2);c2.lineTo(x+ux2*13-px2*2,y+uy2*13-py2*2);c2.lineTo(t[0],t[1]);c2.closePath();c2.fill();
+    });
+    c2.shadowColor=charDef.glow;c2.shadowBlur=8;
+  }else{ // scythe
+    const tipx2=wx-dux*8+dpy*60,tipy2=wy-duy*8-dpx*60;
+    c2.fillStyle='#1a1828';c2cap(wx,wy,tipx2,tipy2,2.8);c2.fill();
+    const sg=c2.createLinearGradient(tipx2,tipy2,tipx2+52,tipy2-20);
+    sg.addColorStop(0,'#330044');sg.addColorStop(0.5,'#9900bb');sg.addColorStop(1,'#ff44ee');
+    c2.fillStyle=sg;c2.shadowColor=charDef.glow;c2.shadowBlur=12;
+    c2.beginPath();c2.moveTo(tipx2,tipy2);c2.bezierCurveTo(tipx2+16,tipy2-11,tipx2+44,tipy2-22,tipx2+56,tipy2-14);c2.bezierCurveTo(tipx2+44,tipy2-6,tipx2+20,tipy2+8,tipx2+4,tipy2+10);c2.closePath();c2.fill();
+  }
+  c2.shadowBlur=0;c2.restore();
+
+  // Glow aura ring
+  c2.strokeStyle=charDef.glow+'55';c2.lineWidth=2;c2.shadowColor=charDef.glow;c2.shadowBlur=16;
+  c2.beginPath();c2.ellipse(cx,fy-42,20,38,0,0,Math.PI*2);c2.stroke();c2.shadowBlur=0;
 }
 
 function buildSelect(){
