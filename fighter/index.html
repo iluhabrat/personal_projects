@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
-canvas{display:block;image-rendering:pixelated;width:100vw;height:57.5vw}
+canvas{display:block;image-rendering:pixelated}
 #ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ui.active{pointer-events:all}
 .screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,.88)}
@@ -70,6 +70,13 @@ h2{font-size:16px;color:#666;letter-spacing:4px;margin-bottom:36px}
 const C = document.getElementById('c'), ctx = C.getContext('2d');
 const W = C.width, H = C.height;
 const ui = document.getElementById('ui');
+(function resizeCanvas(){
+  const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
+  const scale=Math.min(vw/W, vh/H);
+  C.style.width=Math.round(W*scale)+'px';
+  C.style.height=Math.round(H*scale)+'px';
+  window.addEventListener('resize',resizeCanvas);
+})();
 
 // ── AUDIO ───────────────────────────────────────────────────────────────────
 const AC = new (window.AudioContext||window.webkitAudioContext)();
