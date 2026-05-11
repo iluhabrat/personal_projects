@@ -71,8 +71,10 @@ const C = document.getElementById('c'), ctx = C.getContext('2d');
 const W = C.width, H = C.height;
 const ui = document.getElementById('ui');
 (function resizeCanvas(){
-  const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
-  const scale=Math.min(vw/W, vh/H);
+  const vw=document.documentElement.clientWidth||window.innerWidth||800;
+  const vh=document.documentElement.clientHeight||window.innerHeight||460;
+  const scaleW=vw/W, scaleH=vh/H;
+  const scale=vh>100 ? Math.min(scaleW,scaleH) : scaleW;
   C.style.width=Math.round(W*scale)+'px';
   C.style.height=Math.round(H*scale)+'px';
   window.addEventListener('resize',resizeCanvas);
