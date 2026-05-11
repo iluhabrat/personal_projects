@@ -553,7 +553,7 @@ function drawBG(){
 
 // ── HUD ───────────────────────────────────────────────────────────────────────
 function drawHUD(){
-  if(gameState!=='fight')return;
+  if(gameState!=='fight'&&gameState!=='roundover')return;
   const BW=300, BH=22, BY=18;
   // P1 bar
   const r1=p1.hp/p1.maxHp;
@@ -862,13 +862,13 @@ function endRound(timeout){
     wins[winner]++;
     const wf=winner===0?p1:p2, lf=winner===0?p2:p1;
     wf.state='victory';lf.state='dead';
-    if(lf.hp<=6){sfx.finish();showBanner('FINISH HIM!',1800);}
-    else{sfx.round();showBanner(wf.name+' WINS!',1400);}
-  } else showBanner('DRAW!',1400);
+    if(lf.hp<=6){sfx.finish();showBanner('FINISH HIM!',2200);}
+    else{sfx.round();showBanner(wf.name+' WINS!',2200);}
+  } else showBanner('DRAW!',2200);
   setTimeout(()=>{
     if(wins[0]>=2||wins[1]>=2)showGameOver();
     else{round++;startFight();}
-  },2400);
+  },2500);
 }
 
 function startFight(){
@@ -1088,7 +1088,7 @@ window.addEventListener('resize',resizeCanvas);
 resizeCanvas();
 
 function loop(){
-  update();draw();
+  try{update();draw();}catch(e){console.error('game error:',e);}
   requestAnimationFrame(loop);
 }
 loop();
