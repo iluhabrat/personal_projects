@@ -56,8 +56,8 @@ h2{font-size:16px;color:#666;letter-spacing:4px;margin-bottom:36px}
     </div>
     <button class="btn" id="btn-fight" style="opacity:.4;pointer-events:none">FIGHT!</button>
     <div class="controls">
-      <span>P1</span>: A/D Move &nbsp; W Jump &nbsp; U Punch &nbsp; I Kick &nbsp; O Block &nbsp; J Special<br>
-      <span>P2</span>: ←/→ Move &nbsp; ↑ Jump &nbsp; 1 Punch &nbsp; 2 Kick &nbsp; 3 Block &nbsp; 4 Special
+      <span>P1</span>: ←/→ Move &nbsp; ↑ Jump &nbsp; Z Punch &nbsp; X Kick &nbsp; C Block &nbsp; V Special<br>
+      <span>P2</span>: A/D Move &nbsp; W Jump &nbsp; U Punch &nbsp; I Kick &nbsp; O Block &nbsp; J Special
     </div>
   </div>
   <!-- GAMEOVER -->
@@ -614,6 +614,10 @@ function drawHUD(){
   ctx.font='14px Courier New';ctx.fillStyle='#ffaa00';
   ctx.fillText(wdots(0,wins[0])+'  '+wdots(1,wins[1]),W/2,58);
   ctx.textAlign='left';
+  // Controls hint
+  ctx.font='9px Courier New';ctx.fillStyle='#ffffff28';ctx.textAlign='center';
+  ctx.fillText('P1: ←→ move  ↑ jump  Z punch  X kick  C block  V special',W/2,H-6);
+  ctx.textAlign='left';
 }
 
 // ── PARTICLES ────────────────────────────────────────────────────────────────
@@ -723,13 +727,14 @@ function checkAtk(atk,def){
 // ── INPUT ────────────────────────────────────────────────────────────────────
 function handleInput(f,isP1){
   if(['dead','victory'].includes(f.state))return;
-  const L=isP1?(keys['a']||keys['A']):keys['ArrowLeft'];
-  const R=isP1?(keys['d']||keys['D']):keys['ArrowRight'];
-  const J=isP1?(keys['w']||keys['W']):keys['ArrowUp'];
-  const P=isP1?(keys['u']||keys['U']):keys['1'];
-  const K=isP1?(keys['i']||keys['I']):keys['2'];
-  const B=isP1?(keys['o']||keys['O']):keys['3'];
-  const S=isP1?(keys['j']||keys['J']):keys['4'];
+  // P1: Arrow keys + ZXCV  |  P2: WASD + UIOJ
+  const L=isP1?keys['ArrowLeft']:(keys['a']||keys['A']);
+  const R=isP1?keys['ArrowRight']:(keys['d']||keys['D']);
+  const J=isP1?keys['ArrowUp']:(keys['w']||keys['W']);
+  const P=isP1?(keys['z']||keys['Z']):(keys['u']||keys['U']);
+  const K=isP1?(keys['x']||keys['X']):(keys['i']||keys['I']);
+  const B=isP1?(keys['c']||keys['C']):(keys['o']||keys['O']);
+  const S=isP1?(keys['v']||keys['V']):(keys['j']||keys['J']);
 
   f.blocking=false;
   if(['punch','kick','special','hurt'].includes(f.state)){f.stateTimer--;if(f.stateTimer<=0)f.state='idle';return;}
@@ -764,20 +769,19 @@ function cpuAI(cpu,opp){
     else{cpu.vx=0;if(cpu.state==='walk')cpu.state='idle';}
     return;
   }
-  cpu.vx=0;const r=Math.random(),hr=cpu.hp/cpu.maxHp;
-  if(dist>200){cpu.cpuIntent='approach';cpu.cpuTimer=25+Math.random()*20|0;}
-  else if(dist<60){
-    if(r<.07&&cpu.specCd<=0)doSpecial(cpu);
-    else if(r<.28){cpu.state='punch';cpu.stateTimer=15;cpu.atkBox=atkBoxFor(cpu,'punch');}
-    else if(r<.5){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
-    else if(r<.65){cpu.blocking=true;cpu.state='block';cpu.cpuTimer=20+Math.random()*15|0;cpu.cpuIntent='block';}
-    else{cpu.cpuIntent='retreat';cpu.cpuTimer=14;}
+  cpu.vx=0;const r=Math.random();
+  if(dist>180){cpu.cpuIntent='approach';cpu.cpuTimer=15+Math.random()*10|0;}
+  else if(dist<65){
+    if(r<.10&&cpu.specCd<=0)doSpecial(cpu);
+    else if(r<.38){cpu.state='punch';cpu.stateTimer=15;cpu.atkBox=atkBoxFor(cpu,'punch');}
+    else if(r<.60){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
+    else if(r<.72){cpu.blocking=true;cpu.state='block';cpu.cpuTimer=12+Math.random()*10|0;cpu.cpuIntent='block';}
+    else{cpu.cpuIntent='retreat';cpu.cpuTimer=10;}
   } else {
-    if(r<.06&&cpu.specCd<=0)doSpecial(cpu);
-    else if(r<.25){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
-    else if(r<.38&&cpu.onGround){cpu.vy=JUMP_VY;cpu.onGround=false;cpu.state='jump';cpu.cpuTimer=10;}
-    else if(r<.55){cpu.cpuIntent='approach';cpu.cpuTimer=20;}
-    else{cpu.cpuIntent='idle';cpu.cpuTimer=12;}
+    if(r<.08&&cpu.specCd<=0)doSpecial(cpu);
+    else if(r<.30){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
+    else if(r<.42&&cpu.onGround){cpu.vy=JUMP_VY;cpu.onGround=false;cpu.state='jump';cpu.cpuTimer=8;}
+    else{cpu.cpuIntent='approach';cpu.cpuTimer=12;}
   }
 }
 
