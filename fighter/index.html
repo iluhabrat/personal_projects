@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
-canvas{display:block;image-rendering:pixelated;width:min(100vw,calc(100vh * 800 / 460));aspect-ratio:800/460;height:auto}
+canvas{display:block;image-rendering:pixelated}
 #ui{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ui.active{pointer-events:all}
 .screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,.88)}
@@ -764,8 +764,9 @@ function doSpecial(f){
 function cpuAI(cpu,opp){
   if(['dead','victory'].includes(cpu.state))return;
   if(cpu.state==='hurt'){if(--cpu.stateTimer<=0)cpu.state='idle';return;}
-  cpu.blocking=cpu.state==='block';
-  if(['punch','kick','special','block'].includes(cpu.state))return;
+  if(cpu.state==='block'){cpu.blocking=true;if(--cpu.cpuTimer<=0){cpu.state='idle';cpu.blocking=false;}return;}
+  cpu.blocking=false;
+  if(['punch','kick','special'].includes(cpu.state)){if(--cpu.stateTimer<=0)cpu.state='idle';return;}
   cpu.cpuTimer--;const dx=opp.x-cpu.x,dist=Math.abs(dx);
   if(cpu.cpuTimer>0){
     if(cpu.cpuIntent==='approach'){cpu.vx=Math.sign(dx)*cpu.spd;cpu.state='walk';}
@@ -1077,6 +1078,14 @@ document.addEventListener('keyup',e=>{keys[e.key]=false;});
 p1=makeFighter(CHARS[0],160,1);
 p2=makeFighter(CHARS[3],640,-1);
 gameState='menu';ui.classList.add('active');
+
+function resizeCanvas(){
+  const s=Math.min(window.innerWidth/800,window.innerHeight/460);
+  C.style.width=Math.round(800*s)+'px';
+  C.style.height=Math.round(460*s)+'px';
+}
+window.addEventListener('resize',resizeCanvas);
+resizeCanvas();
 
 function loop(){
   update();draw();
