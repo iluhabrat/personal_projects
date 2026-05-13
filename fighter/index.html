@@ -8,7 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
-canvas{display:block}
+canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 #ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ui.active{pointer-events:all}
 .screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,.88)}
@@ -105,17 +105,13 @@ function startBGM(){
   try{
     const bass=AC.createOscillator(), bassG=AC.createGain();
     bass.type='sawtooth';bass.frequency.value=55;
-    bassG.gain.value=0.07;bass.connect(bassG);bassG.connect(AC.destination);bass.start();
+    bassG.gain.value=0.03;bass.connect(bassG);bassG.connect(AC.destination);bass.start();
     const pad=AC.createOscillator(), padG=AC.createGain();
     pad.type='sine';pad.frequency.value=110;
-    padG.gain.value=0.04;pad.connect(padG);padG.connect(AC.destination);pad.start();
+    padG.gain.value=0.02;pad.connect(padG);padG.connect(AC.destination);pad.start();
     const pad2=AC.createOscillator(), pad2G=AC.createGain();
     pad2.type='sine';pad2.frequency.value=82.4;
-    pad2G.gain.value=0.03;pad2.connect(pad2G);pad2G.connect(AC.destination);pad2.start();
-    // rhythmic LFO on bass
-    const lfo=AC.createOscillator(), lfoG=AC.createGain();
-    lfo.frequency.value=1.5;lfoG.gain.value=0.05;
-    lfo.connect(lfoG);lfoG.connect(bassG.gain);lfo.start();
+    pad2G.gain.value=0.015;pad2.connect(pad2G);pad2G.connect(AC.destination);pad2.start();
   }catch(e){}
 }
 let bgmStarted=false;
@@ -354,7 +350,7 @@ function drawHead(f,j,C1,C2,CA){
   ctx.beginPath(); ctx.moveTo(hx-13,hy); ctx.lineTo(hx+13,hy); ctx.stroke();
   // Glowing eyes
   const ex=hx+dir*3;
-  ctx.fillStyle=f.glow; ctx.shadowColor=f.glow; ctx.shadowBlur=14;
+  ctx.fillStyle=f.glow; ctx.shadowColor=f.glow; ctx.shadowBlur=7;
   ctx.beginPath(); ctx.ellipse(ex,hy+3,4,2.5,0,0,Math.PI*2); ctx.fill();
   ctx.shadowBlur=0;
   // Cheek plates
@@ -379,7 +375,7 @@ function drawWeaponAt(f,j){
   const ux=dx/len,uy=dy/len,px=-uy,py=ux;
   const swing=['punch','kick','special'].includes(f.state);
   ctx.save();
-  if(swing){ctx.shadowColor=f.glow;ctx.shadowBlur=18;}
+  if(swing){ctx.shadowColor=f.glow;ctx.shadowBlur=10;}
 
   if(f.weapon==='katana'){
     // Handle (behind wrist toward elbow)
@@ -511,7 +507,7 @@ function drawBG(){
 
   // Moon
   ctx.save();
-  ctx.shadowColor='#ffe0a0';ctx.shadowBlur=40;
+  ctx.shadowColor='#ffe0a0';ctx.shadowBlur=18;
   ctx.fillStyle='#ffe8c0';ctx.beginPath();ctx.arc(700,55,38,0,Math.PI*2);ctx.fill();
   ctx.fillStyle='#0d0020';ctx.beginPath();ctx.arc(714,46,32,0,Math.PI*2);ctx.fill();
   ctx.restore();
@@ -548,7 +544,7 @@ function drawBG(){
     // torch flame
     if(i%2===0){
       const fl=Math.sin(frameCount*.15+i)*.3+.7;
-      ctx.save();ctx.shadowColor='#ff8800';ctx.shadowBlur=20*fl;
+      ctx.save();ctx.shadowColor='#ff8800';ctx.shadowBlur=10*fl;
       ctx.fillStyle=`rgba(255,${140+60*fl|0},0,${fl})`;
       ctx.beginPath();ctx.ellipse(px+14,112,4,8*fl,0,0,Math.PI*2);ctx.fill();
       ctx.fillStyle=`rgba(255,220,0,${fl*.7})`;
@@ -568,7 +564,7 @@ function drawBG(){
   ctx.beginPath();ctx.moveTo(0,FLOOR+40);ctx.lineTo(W,FLOOR+40);ctx.stroke();
 
   // Floor glow line
-  ctx.save();ctx.shadowColor='#8833cc';ctx.shadowBlur=20;
+  ctx.save();ctx.shadowColor='#8833cc';ctx.shadowBlur=8;
   ctx.strokeStyle='#aa44ff';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(0,FLOOR);ctx.lineTo(W,FLOOR);ctx.stroke();
   ctx.restore();
