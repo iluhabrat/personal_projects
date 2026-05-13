@@ -6,7 +6,8 @@
 <title>Shadow Kombat</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
+html,body{height:100%}
+body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
 canvas{display:block;image-rendering:pixelated}
 #ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ui.active{pointer-events:all}
@@ -54,7 +55,10 @@ h2{font-size:16px;color:#666;letter-spacing:4px;margin-bottom:36px}
       <div class="vs">VS</div>
       <div><div class="vslabel" id="p2-label">PLAYER 2</div><div class="char-grid" id="p2-grid"></div></div>
     </div>
-    <button class="btn" id="btn-fight" style="opacity:.4;pointer-events:none">FIGHT!</button>
+    <div style="display:flex;gap:14px;margin-bottom:12px">
+      <button class="btn" id="btn-back" style="background:transparent;border-color:#444;color:#666">← BACK</button>
+      <button class="btn" id="btn-fight" style="opacity:.4;pointer-events:none">FIGHT!</button>
+    </div>
     <div class="controls">
       <span>P1</span>: ←/→ Move &nbsp; ↑ Jump &nbsp; Z Punch &nbsp; X Kick &nbsp; C Block &nbsp; V Special<br>
       <span>P2</span>: A/D Move &nbsp; W Jump &nbsp; U Punch &nbsp; I Kick &nbsp; O Block &nbsp; J Special
@@ -71,10 +75,10 @@ const C = document.getElementById('c'), ctx = C.getContext('2d');
 const W = C.width, H = C.height;
 const ui = document.getElementById('ui');
 (function resizeCanvas(){
-  const vw=document.documentElement.clientWidth||window.innerWidth||800;
-  const vh=document.documentElement.clientHeight||window.innerHeight||460;
-  const scaleW=vw/W, scaleH=vh/H;
-  const scale=vh>100 ? Math.min(scaleW,scaleH) : scaleW;
+  // ui is position:fixed;inset:0 — its offsetWidth/Height ARE the viewport dimensions
+  const vw=ui.offsetWidth||window.screen.availWidth||window.screen.width||800;
+  const vh=ui.offsetHeight||window.screen.availHeight||window.screen.height||460;
+  const scale=Math.min(vw/W, vh/H);
   C.style.width=Math.round(W*scale)+'px';
   C.style.height=Math.round(H*scale)+'px';
   window.addEventListener('resize',resizeCanvas);
@@ -97,6 +101,24 @@ function noise(dur,vol=0.4){
   s.buffer=buf;s.connect(g);g.connect(AC.destination);
   g.gain.value=vol;s.start();}catch(e){}
 }
+function startBGM(){
+  try{
+    const bass=AC.createOscillator(), bassG=AC.createGain();
+    bass.type='sawtooth';bass.frequency.value=55;
+    bassG.gain.value=0.07;bass.connect(bassG);bassG.connect(AC.destination);bass.start();
+    const pad=AC.createOscillator(), padG=AC.createGain();
+    pad.type='sine';pad.frequency.value=110;
+    padG.gain.value=0.04;pad.connect(padG);padG.connect(AC.destination);pad.start();
+    const pad2=AC.createOscillator(), pad2G=AC.createGain();
+    pad2.type='sine';pad2.frequency.value=82.4;
+    pad2G.gain.value=0.03;pad2.connect(pad2G);pad2G.connect(AC.destination);pad2.start();
+    // rhythmic LFO on bass
+    const lfo=AC.createOscillator(), lfoG=AC.createGain();
+    lfo.frequency.value=1.5;lfoG.gain.value=0.05;
+    lfo.connect(lfoG);lfoG.connect(bassG.gain);lfo.start();
+  }catch(e){}
+}
+let bgmStarted=false;
 const sfx={
   punch:()=>{tone(160,'sawtooth',.09,.4);noise(.05,.2)},
   kick:()=>{tone(100,'sawtooth',.13,.5);noise(.08,.3)},
@@ -627,7 +649,11 @@ function drawHUD(){
   ctx.textAlign='left';
   // Controls hint
   ctx.font='9px Courier New';ctx.fillStyle='#ffffff28';ctx.textAlign='center';
-  ctx.fillText('P1: ←→ move  ↑ jump  Z punch  X kick  C block  V special',W/2,H-6);
+  if(mode==='cpu'){
+    ctx.fillText('P1: ←→ move  ↑ jump  Z punch  X kick  C block  V special',W/2,H-6);
+  } else {
+    ctx.fillText('P1: ←→ ↑ Z X C V       P2: A D W U I O J',W/2,H-6);
+  }
   ctx.textAlign='left';
 }
 
@@ -1072,10 +1098,12 @@ function showMenu(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-document.getElementById('btn-1p').onclick=()=>{mode='cpu';hideAllScreens();showSelect();AC.resume();};
-document.getElementById('btn-2p').onclick=()=>{mode='2p'; hideAllScreens();showSelect();AC.resume();};
-document.getElementById('btn-fight'||'').onclick=()=>{};
-document.addEventListener('click',e=>{if(e.target.id==='btn-fight'){hideAllScreens();wins=[0,0];round=1;startFight();}});
+document.getElementById('btn-1p').onclick=()=>{mode='cpu';hideAllScreens();showSelect();AC.resume().then(()=>{if(!bgmStarted){bgmStarted=true;startBGM();}});};
+document.getElementById('btn-2p').onclick=()=>{mode='2p'; hideAllScreens();showSelect();AC.resume().then(()=>{if(!bgmStarted){bgmStarted=true;startBGM();}});};
+document.addEventListener('click',e=>{
+  if(e.target.id==='btn-fight'){hideAllScreens();wins=[0,0];round=1;startFight();}
+  if(e.target.id==='btn-back'){hideAllScreens();showMenu();}
+});
 
 document.addEventListener('keydown',e=>{
   keys[e.key]=true;
