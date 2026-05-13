@@ -50,82 +50,136 @@ const sfx={
 };
 
 // ── BGM ──────────────────────────────────────────────────────────────────────
-// Japanese "in" pentatonic: A Bb D E F (root A)
-const SF=[110,116.5,146.8,164.8,174.6,220,233.1,293.7,329.6,349.2,440,466.2,587.3,659.3];
-//  idx:  0   1      2    3    4    5    6    7    8    9    10   11   12   13
-//  note: A2  Bb2   D3   E3   F3   A3  Bb3  D4   E4   F4   A4  Bb4   D5   E5
-
-const bgmMaster=AC.createGain();bgmMaster.gain.value=0.7;bgmMaster.connect(AC.destination);
-let bgmActive=false,bgmBeat=0,bgmNextBeat=0,bgmSchedId=null,droneNodes=[];
-
-// 32-beat loop (8 bars × 4/4 at 70 BPM)  inst: 0=shakuhachi 1=koto 2=taiko
-const BGM_PAT=[
-  // ─ shakuhachi melody ─────────────────────────
-  {b:0, i:0,fi:8, d:4,  v:.20},{b:4, i:0,fi:6, d:2,  v:.17},
-  {b:6, i:0,fi:5, d:2,  v:.19},{b:8, i:0,fi:9, d:3,  v:.20},
-  {b:11,i:0,fi:8, d:1,  v:.15},{b:12,i:0,fi:6, d:2,  v:.17},
-  {b:14,i:0,fi:5, d:2,  v:.19},{b:16,i:0,fi:11,d:4,  v:.20},
-  {b:20,i:0,fi:9, d:2,  v:.18},{b:22,i:0,fi:8, d:2,  v:.17},
-  {b:24,i:0,fi:8, d:2,  v:.19},{b:26,i:0,fi:6, d:2,  v:.17},
-  {b:28,i:0,fi:5, d:4,  v:.20},
-  // ─ koto plucks ───────────────────────────────
-  {b:2, i:1,fi:7, d:.5, v:.10},{b:5, i:1,fi:5, d:.5, v:.09},
-  {b:7, i:1,fi:4, d:.5, v:.09},{b:10,i:1,fi:7, d:.5, v:.10},
-  {b:13,i:1,fi:5, d:.5, v:.09},{b:15,i:1,fi:3, d:.5, v:.09},
-  {b:18,i:1,fi:10,d:.5, v:.10},{b:19,i:1,fi:8, d:.5, v:.09},
-  {b:21,i:1,fi:7, d:.5, v:.09},{b:23,i:1,fi:5, d:.5, v:.09},
-  {b:27,i:1,fi:7, d:.5, v:.09},{b:30,i:1,fi:4, d:.5, v:.09},
-  {b:31,i:1,fi:2, d:.5, v:.09},
-  // ─ taiko ─────────────────────────────────────
-  {b:0, i:2,fi:0,d:.5,v:.32},{b:8, i:2,fi:0,d:.5,v:.26},
-  {b:16,i:2,fi:0,d:.5,v:.32},{b:24,i:2,fi:0,d:.5,v:.26},
-  {b:4, i:2,fi:0,d:.5,v:.14},{b:12,i:2,fi:0,d:.5,v:.14},
-  {b:20,i:2,fi:0,d:.5,v:.14},{b:28,i:2,fi:0,d:.5,v:.14},
+// Hirajoshi scale (root A): A B C E F — classic traditional Japanese pentatonic
+const SF=[
+  110.00,123.47,130.81,164.81,174.61,  // A2 B2 C3 E3 F3   idx 0-4
+  220.00,246.94,261.63,329.63,349.23,  // A3 B3 C4 E4 F4   idx 5-9
+  440.00,493.88,523.25,659.25,698.46   // A4 B4 C5 E5 F5   idx 10-14
 ];
 
-const BEAT_DUR=60/70;
-let taikoBuf=null;
+const bgmMaster=AC.createGain();bgmMaster.gain.value=0.65;bgmMaster.connect(AC.destination);
+let bgmActive=false,bgmBeat=0,bgmNextBeat=0,bgmSchedId=null,droneNodes=[];
+
+const BEAT_DUR=60/66; // 66 BPM — meditative but keeps pace with the runner
+// 48-beat loop (12 bars × 4/4)  inst: 0=shakuhachi  1=koto  2=taiko  3=bell
+const BGM_PAT=[
+  // ─ shakuhachi melody — long tones with "ma" (空間) breathing space ──────
+  {b:0,  i:0,fi:8, d:5.5,v:.22},  // E4 — opening
+  {b:6,  i:0,fi:7, d:2,  v:.18},  // C4
+  {b:9,  i:0,fi:9, d:3,  v:.20},  // F4 — flat 6th (characteristic Japanese colour)
+  {b:13, i:0,fi:8, d:2,  v:.19},  // E4 — return
+  {b:17, i:0,fi:5, d:5,  v:.21},  // A3 — tonic, breath
+  {b:23, i:0,fi:6, d:2,  v:.17},  // B3
+  {b:26, i:0,fi:7, d:3,  v:.19},  // C4
+  {b:30, i:0,fi:8, d:4,  v:.21},  // E4
+  {b:35, i:0,fi:10,d:5,  v:.22},  // A4 — high climax
+  {b:41, i:0,fi:9, d:2,  v:.18},  // F4 — colour note
+  {b:44, i:0,fi:8, d:2,  v:.18},  // E4
+  {b:47, i:0,fi:5, d:3,  v:.20},  // A3 — resolve (rings into next loop)
+  // ─ koto — sparse plucks between shakuhachi phrases ──────────────────────
+  {b:2,  i:1,fi:5, d:.5, v:.13},
+  {b:4,  i:1,fi:8, d:.5, v:.12},
+  {b:8,  i:1,fi:7, d:.5, v:.11},
+  {b:12, i:1,fi:5, d:.5, v:.12},
+  {b:15, i:1,fi:3, d:.5, v:.11},  // E3 — low register
+  {b:19, i:1,fi:5, d:.5, v:.10},
+  {b:22, i:1,fi:3, d:.5, v:.10},
+  {b:25, i:1,fi:7, d:.5, v:.11},
+  {b:28, i:1,fi:8, d:.5, v:.12},
+  {b:33, i:1,fi:10,d:.5, v:.12},
+  {b:38, i:1,fi:9, d:.5, v:.11},
+  {b:42, i:1,fi:5, d:.5, v:.12},
+  {b:46, i:1,fi:3, d:.5, v:.10},
+  // ─ taiko — minimal, anchors downbeats only ──────────────────────────────
+  {b:0,  i:2,fi:0,d:.5,v:.40},
+  {b:12, i:2,fi:0,d:.5,v:.26},
+  {b:24, i:2,fi:0,d:.5,v:.40},
+  {b:36, i:2,fi:0,d:.5,v:.26},
+  {b:8,  i:2,fi:0,d:.4,v:.18},
+  {b:20, i:2,fi:0,d:.4,v:.18},
+  {b:32, i:2,fi:0,d:.4,v:.18},
+  {b:44, i:2,fi:0,d:.4,v:.18},
+  // ─ bell (rin) — high, sparse, ethereal ──────────────────────────────────
+  {b:5,  i:3,fi:12,d:1, v:.09},
+  {b:16, i:3,fi:13,d:1, v:.08},
+  {b:24, i:3,fi:10,d:1, v:.08},
+  {b:32, i:3,fi:12,d:1, v:.09},
+  {b:40, i:3,fi:13,d:1, v:.08},
+];
+
+let taikoBuf=null,breathBuf=null;
 function getTaikoBuf(){
   if(taikoBuf)return taikoBuf;
-  const buf=AC.createBuffer(1,AC.sampleRate*0.32,AC.sampleRate);
+  const buf=AC.createBuffer(1,AC.sampleRate*0.35,AC.sampleRate);
   const d=buf.getChannelData(0);
   for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,2.5);
   return taikoBuf=buf;
+}
+function getBreathBuf(){
+  if(breathBuf)return breathBuf;
+  const buf=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let k=0;k<d.length;k++)d[k]=Math.random()*2-1;
+  return breathBuf=buf;
 }
 
 function bgmPlayNote(e,t){
   const f=SF[e.fi],dur=e.d*BEAT_DUR;
   if(e.i===0){
-    // Shakuhachi — sine with vibrato LFO
+    // Shakuhachi — sine fundamental + bandpass-filtered breath noise + vibrato
     const o=AC.createOscillator(),g=AC.createGain();
     const lfo=AC.createOscillator(),lg=AC.createGain();
-    lfo.type='sine';lfo.frequency.value=4.8;lg.gain.value=f*0.013;
+    lfo.type='sine';lfo.frequency.value=5.0;lg.gain.value=f*0.014;
     lfo.connect(lg);lg.connect(o.frequency);
     o.type='sine';o.frequency.value=f;
     o.connect(g);g.connect(bgmMaster);
     g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(e.v,t+Math.min(0.32,dur*0.28));
-    g.gain.setValueAtTime(e.v,t+dur-0.38);
+    g.gain.linearRampToValueAtTime(e.v*0.85,t+Math.min(0.45,dur*0.25));
+    g.gain.setValueAtTime(e.v*0.85,t+dur-0.5);
     g.gain.linearRampToValueAtTime(0,t+dur);
+    const ns=AC.createBufferSource();ns.buffer=getBreathBuf();ns.loop=true;
+    const nf=AC.createBiquadFilter();nf.type='bandpass';nf.frequency.value=f;nf.Q.value=10;
+    const ng=AC.createGain();
+    ns.connect(nf);nf.connect(ng);ng.connect(bgmMaster);
+    ng.gain.setValueAtTime(e.v*0.18,t);
+    ng.gain.linearRampToValueAtTime(e.v*0.05,t+0.5);
+    ng.gain.linearRampToValueAtTime(0,t+dur);
     lfo.start(t);lfo.stop(t+dur);
     o.start(t);o.stop(t+dur);
+    ns.start(t);ns.stop(t+dur);
   } else if(e.i===1){
-    // Koto — triangle, instant attack, exponential decay
+    // Koto — sawtooth through lowpass, pitch-settle envelope, long exponential decay
     const o=AC.createOscillator(),g=AC.createGain();
-    o.type='triangle';o.frequency.value=f;
-    o.connect(g);g.connect(bgmMaster);
+    const flt=AC.createBiquadFilter();
+    o.type='sawtooth';o.frequency.value=f*1.004;
+    o.frequency.setValueAtTime(f*1.004,t);
+    o.frequency.exponentialRampToValueAtTime(f,t+0.04);
+    flt.type='lowpass';flt.frequency.value=f*4.5;flt.Q.value=0.7;
+    o.connect(flt);flt.connect(g);g.connect(bgmMaster);
     g.gain.setValueAtTime(e.v,t);
-    g.gain.exponentialRampToValueAtTime(0.001,t+0.82);
-    o.start(t);o.stop(t+0.86);
-  } else {
+    g.gain.exponentialRampToValueAtTime(0.001,t+1.6);
+    o.start(t);o.stop(t+1.7);
+  } else if(e.i===2){
     // Taiko — shaped noise through bandpass
     const src=AC.createBufferSource();src.buffer=getTaikoBuf();
-    const flt=AC.createBiquadFilter();flt.type='bandpass';flt.frequency.value=82;flt.Q.value=2.2;
+    const flt=AC.createBiquadFilter();flt.type='bandpass';flt.frequency.value=78;flt.Q.value=2.0;
     const g=AC.createGain();
     src.connect(flt);flt.connect(g);g.connect(bgmMaster);
-    g.gain.setValueAtTime(e.v*1.5,t);
+    g.gain.setValueAtTime(e.v*1.4,t);
     g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
     src.start(t);src.stop(t+0.35);
+  } else {
+    // Bell/Rin — sine + inharmonic 2.756× partial, long ring decay
+    const o=AC.createOscillator(),o2=AC.createOscillator();
+    const g=AC.createGain(),g2=AC.createGain();
+    o.type='sine';o.frequency.value=f;
+    o2.type='sine';o2.frequency.value=f*2.756;
+    g2.gain.value=0.28;
+    o.connect(g);o2.connect(g2);g2.connect(g);g.connect(bgmMaster);
+    g.gain.setValueAtTime(e.v,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+3.5);
+    o.start(t);o.stop(t+3.6);
+    o2.start(t);o2.stop(t+3.6);
   }
 }
 
@@ -135,7 +189,7 @@ function bgmTick(){
   while(bgmNextBeat<now+0.5){
     BGM_PAT.forEach(e=>{if(e.b===bgmBeat)bgmPlayNote(e,bgmNextBeat);});
     bgmNextBeat+=BEAT_DUR;
-    bgmBeat=(bgmBeat+1)%32;
+    bgmBeat=(bgmBeat+1)%48;
   }
   bgmSchedId=setTimeout(bgmTick,80);
 }
@@ -143,13 +197,13 @@ function bgmTick(){
 function bgmStart(){
   if(bgmActive)return;
   bgmActive=true;bgmBeat=0;bgmNextBeat=AC.currentTime+0.2;
-  // Ambient drone — 3 detuned sine layers with slow tremolo
-  [[110,0.052],[220.5,0.032],[330.2,0.016]].forEach(([freq,vol],idx)=>{
+  // Bordun drone — A2+E3 perfect fifth, very quiet slow tremolo
+  [[110,0.038],[164.81,0.022]].forEach(([freq,vol],idx)=>{
     const o=AC.createOscillator(),g=AC.createGain();
     const lfo=AC.createOscillator(),lg2=AC.createGain();
     o.type='sine';o.frequency.value=freq;
-    lfo.type='sine';lfo.frequency.value=0.07+idx*0.04;
-    lg2.gain.value=vol*0.2;
+    lfo.type='sine';lfo.frequency.value=0.06+idx*0.04;
+    lg2.gain.value=vol*0.22;
     lfo.connect(lg2);lg2.connect(g.gain);
     o.connect(g);g.connect(bgmMaster);
     g.gain.value=vol;
