@@ -8,7 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
-canvas{display:block;image-rendering:pixelated}
+canvas{display:block}
 #ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ui.active{pointer-events:all}
 .screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,.88)}
@@ -585,7 +585,10 @@ function drawBG(){
 // ── HUD ───────────────────────────────────────────────────────────────────────
 function drawHUD(){
   if(gameState!=='fight'&&gameState!=='roundover')return;
-  const BW=300, BH=22, BY=18;
+  const BW=300, BH=26, BY=18;
+  // dark backing panel behind HUD
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(10,8,BW+22,BH+32);
+  ctx.fillRect(W-10-BW-22,8,BW+22,BH+32);
   // P1 bar
   const r1=p1.hp/p1.maxHp;
   ctx.fillStyle='#1a0010';ctx.fillRect(18,BY,BW,BH);
@@ -1116,11 +1119,17 @@ p1=makeFighter(CHARS[0],160,1);
 p2=makeFighter(CHARS[3],640,-1);
 gameState='menu';ui.classList.add('active');
 
-function loop(){
-  try{update();draw();}catch(e){console.error('game error:',e);}
+let _lastT=performance.now(), _acc=0;
+const _FDT=1000/60;
+function loop(ts){
+  try{
+    _acc+=Math.min(ts-_lastT,50);_lastT=ts;
+    while(_acc>=_FDT){update();_acc-=_FDT;}
+    draw();
+  }catch(e){console.error('game error:',e);}
   requestAnimationFrame(loop);
 }
-loop();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
