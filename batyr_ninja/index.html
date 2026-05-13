@@ -49,6 +49,121 @@ const sfx={
   slide: ()=>{tone(180,'square',.1,.15)},
 };
 
+// ── BGM ──────────────────────────────────────────────────────────────────────
+// Japanese "in" pentatonic: A Bb D E F (root A)
+const SF=[110,116.5,146.8,164.8,174.6,220,233.1,293.7,329.6,349.2,440,466.2,587.3,659.3];
+//  idx:  0   1      2    3    4    5    6    7    8    9    10   11   12   13
+//  note: A2  Bb2   D3   E3   F3   A3  Bb3  D4   E4   F4   A4  Bb4   D5   E5
+
+const bgmMaster=AC.createGain();bgmMaster.gain.value=0.7;bgmMaster.connect(AC.destination);
+let bgmActive=false,bgmBeat=0,bgmNextBeat=0,bgmSchedId=null,droneNodes=[];
+
+// 32-beat loop (8 bars × 4/4 at 70 BPM)  inst: 0=shakuhachi 1=koto 2=taiko
+const BGM_PAT=[
+  // ─ shakuhachi melody ─────────────────────────
+  {b:0, i:0,fi:8, d:4,  v:.20},{b:4, i:0,fi:6, d:2,  v:.17},
+  {b:6, i:0,fi:5, d:2,  v:.19},{b:8, i:0,fi:9, d:3,  v:.20},
+  {b:11,i:0,fi:8, d:1,  v:.15},{b:12,i:0,fi:6, d:2,  v:.17},
+  {b:14,i:0,fi:5, d:2,  v:.19},{b:16,i:0,fi:11,d:4,  v:.20},
+  {b:20,i:0,fi:9, d:2,  v:.18},{b:22,i:0,fi:8, d:2,  v:.17},
+  {b:24,i:0,fi:8, d:2,  v:.19},{b:26,i:0,fi:6, d:2,  v:.17},
+  {b:28,i:0,fi:5, d:4,  v:.20},
+  // ─ koto plucks ───────────────────────────────
+  {b:2, i:1,fi:7, d:.5, v:.10},{b:5, i:1,fi:5, d:.5, v:.09},
+  {b:7, i:1,fi:4, d:.5, v:.09},{b:10,i:1,fi:7, d:.5, v:.10},
+  {b:13,i:1,fi:5, d:.5, v:.09},{b:15,i:1,fi:3, d:.5, v:.09},
+  {b:18,i:1,fi:10,d:.5, v:.10},{b:19,i:1,fi:8, d:.5, v:.09},
+  {b:21,i:1,fi:7, d:.5, v:.09},{b:23,i:1,fi:5, d:.5, v:.09},
+  {b:27,i:1,fi:7, d:.5, v:.09},{b:30,i:1,fi:4, d:.5, v:.09},
+  {b:31,i:1,fi:2, d:.5, v:.09},
+  // ─ taiko ─────────────────────────────────────
+  {b:0, i:2,fi:0,d:.5,v:.32},{b:8, i:2,fi:0,d:.5,v:.26},
+  {b:16,i:2,fi:0,d:.5,v:.32},{b:24,i:2,fi:0,d:.5,v:.26},
+  {b:4, i:2,fi:0,d:.5,v:.14},{b:12,i:2,fi:0,d:.5,v:.14},
+  {b:20,i:2,fi:0,d:.5,v:.14},{b:28,i:2,fi:0,d:.5,v:.14},
+];
+
+const BEAT_DUR=60/70;
+let taikoBuf=null;
+function getTaikoBuf(){
+  if(taikoBuf)return taikoBuf;
+  const buf=AC.createBuffer(1,AC.sampleRate*0.32,AC.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*Math.pow(1-k/d.length,2.5);
+  return taikoBuf=buf;
+}
+
+function bgmPlayNote(e,t){
+  const f=SF[e.fi],dur=e.d*BEAT_DUR;
+  if(e.i===0){
+    // Shakuhachi — sine with vibrato LFO
+    const o=AC.createOscillator(),g=AC.createGain();
+    const lfo=AC.createOscillator(),lg=AC.createGain();
+    lfo.type='sine';lfo.frequency.value=4.8;lg.gain.value=f*0.013;
+    lfo.connect(lg);lg.connect(o.frequency);
+    o.type='sine';o.frequency.value=f;
+    o.connect(g);g.connect(bgmMaster);
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(e.v,t+Math.min(0.32,dur*0.28));
+    g.gain.setValueAtTime(e.v,t+dur-0.38);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    lfo.start(t);lfo.stop(t+dur);
+    o.start(t);o.stop(t+dur);
+  } else if(e.i===1){
+    // Koto — triangle, instant attack, exponential decay
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type='triangle';o.frequency.value=f;
+    o.connect(g);g.connect(bgmMaster);
+    g.gain.setValueAtTime(e.v,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.82);
+    o.start(t);o.stop(t+0.86);
+  } else {
+    // Taiko — shaped noise through bandpass
+    const src=AC.createBufferSource();src.buffer=getTaikoBuf();
+    const flt=AC.createBiquadFilter();flt.type='bandpass';flt.frequency.value=82;flt.Q.value=2.2;
+    const g=AC.createGain();
+    src.connect(flt);flt.connect(g);g.connect(bgmMaster);
+    g.gain.setValueAtTime(e.v*1.5,t);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+    src.start(t);src.stop(t+0.35);
+  }
+}
+
+function bgmTick(){
+  if(!bgmActive)return;
+  const now=AC.currentTime;
+  while(bgmNextBeat<now+0.5){
+    BGM_PAT.forEach(e=>{if(e.b===bgmBeat)bgmPlayNote(e,bgmNextBeat);});
+    bgmNextBeat+=BEAT_DUR;
+    bgmBeat=(bgmBeat+1)%32;
+  }
+  bgmSchedId=setTimeout(bgmTick,80);
+}
+
+function bgmStart(){
+  if(bgmActive)return;
+  bgmActive=true;bgmBeat=0;bgmNextBeat=AC.currentTime+0.2;
+  // Ambient drone — 3 detuned sine layers with slow tremolo
+  [[110,0.052],[220.5,0.032],[330.2,0.016]].forEach(([freq,vol],idx)=>{
+    const o=AC.createOscillator(),g=AC.createGain();
+    const lfo=AC.createOscillator(),lg2=AC.createGain();
+    o.type='sine';o.frequency.value=freq;
+    lfo.type='sine';lfo.frequency.value=0.07+idx*0.04;
+    lg2.gain.value=vol*0.2;
+    lfo.connect(lg2);lg2.connect(g.gain);
+    o.connect(g);g.connect(bgmMaster);
+    g.gain.value=vol;
+    o.start();lfo.start();
+    droneNodes.push(o,lfo);
+  });
+  bgmTick();
+}
+
+function bgmStop(){
+  bgmActive=false;clearTimeout(bgmSchedId);
+  droneNodes.forEach(n=>{try{n.stop();}catch(e){}});droneNodes=[];
+}
+
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const GY=335;
 const GRAVity=0.72;
@@ -1238,7 +1353,7 @@ function drawOver(){
 // ── INPUT ─────────────────────────────────────────────────────────────────────
 function onAction(){
   AC.resume();
-  if(state==='menu'||state==='over')startGame();
+  if(state==='menu'||state==='over'){bgmStart();startGame();}
   else if(state==='play')doJump();
 }
 document.addEventListener('keydown',e=>{
