@@ -31,6 +31,7 @@ h2{font-size:16px;color:#666;letter-spacing:4px;margin-bottom:36px}
 .controls{font-size:10px;color:#444;text-align:center;line-height:2.2;letter-spacing:1px;margin-top:8px}
 .controls span{color:#777}
 #banner{position:fixed;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:20}
+#scr-over{background:transparent!important}
 #banner.show{display:flex}
 #banner-text{font-size:58px;font-weight:900;letter-spacing:8px;color:#ff0;text-shadow:0 0 40px #f80,0 0 80px #f004;animation:pop .35s ease-out}
 @keyframes pop{from{transform:scale(2.5);opacity:0}to{transform:scale(1);opacity:1}}
@@ -145,6 +146,7 @@ const FLOOR=375, GRAVITY=0.72, JUMP_VY=-17, MAX_ROUND=60;
 let mode='cpu', gameState='menu';
 let p1,p2, round=1, wins=[0,0];
 let roundTimer=MAX_ROUND, timerTick=0, frameCount=0;
+let gameOverWinner=null;
 let particles=[], hitTexts=[], trails=[], projectiles=[];
 let shake=0, keys={};
 let p1sel=null, p2sel=null;
@@ -863,6 +865,19 @@ function draw(){
   drawProjectiles();
   drawParticles();
   drawHitTexts();
+  if(gameState==='gameover'&&gameOverWinner){
+    ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(0,68,W,H-68);
+    ctx.textAlign='center';
+    ctx.font='bold 44px Courier New';ctx.fillStyle=gameOverWinner.glow;
+    ctx.shadowColor=gameOverWinner.glow;ctx.shadowBlur=22;
+    ctx.fillText(gameOverWinner.name,W/2,H/2-10);
+    ctx.shadowBlur=0;
+    ctx.font='bold 22px Courier New';ctx.fillStyle='#ff8800';
+    ctx.fillText('CHAMPION!',W/2,H/2+28);
+    ctx.font='13px Courier New';ctx.fillStyle='#666';
+    ctx.fillText('Score: '+wins[0]+' – '+wins[1],W/2,H/2+52);
+    ctx.textAlign='left';
+  }
   drawHUD();
   ctx.restore();
 }
@@ -902,19 +917,18 @@ function startFight(){
 function showGameOver(){
   const winner=wins[0]>=2?p1:p2;
   gameState='gameover';
+  gameOverWinner=winner;
   const scr=document.getElementById('scr-over');
-  scr.innerHTML=`<h1 style="font-size:34px;color:${winner.glow};text-shadow:0 0 30px ${winner.glow}">${winner.name}</h1>
-  <h2 style="color:#f80;margin-bottom:6px">CHAMPION!</h2>
-  <p style="color:#555;font-size:12px;margin-bottom:30px">Score: ${wins[0]} – ${wins[1]}</p>
-  <div style="display:flex;gap:14px">
+  scr.innerHTML=`<div style="flex:1"></div>
+  <div style="display:flex;gap:14px;padding-bottom:36px">
     <button class="btn" id="btn-rematch">REMATCH</button>
     <button class="btn" id="btn-sel">SELECT</button>
     <button class="btn" id="btn-menu2">MENU</button>
   </div>`;
   scr.classList.add('show');ui.classList.add('active');
-  document.getElementById('btn-rematch').onclick=()=>{wins=[0,0];round=1;hideAllScreens();startFight();};
-  document.getElementById('btn-sel').onclick=()=>{wins=[0,0];round=1;hideAllScreens();showSelect();};
-  document.getElementById('btn-menu2').onclick=()=>{wins=[0,0];round=1;hideAllScreens();showMenu();};
+  document.getElementById('btn-rematch').onclick=()=>{gameOverWinner=null;wins=[0,0];round=1;hideAllScreens();startFight();};
+  document.getElementById('btn-sel').onclick=()=>{gameOverWinner=null;wins=[0,0];round=1;hideAllScreens();showSelect();};
+  document.getElementById('btn-menu2').onclick=()=>{gameOverWinner=null;wins=[0,0];round=1;hideAllScreens();showMenu();};
 }
 
 function hideAllScreens(){
