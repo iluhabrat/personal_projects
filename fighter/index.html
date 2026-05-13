@@ -8,7 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Courier New',monospace;color:#fff;user-select:none;overflow:hidden}
-canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+canvas{display:block}
 #ui{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #ui.active{pointer-events:all}
 .screen{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;background:rgba(0,0,0,.88)}
@@ -100,19 +100,6 @@ function noise(dur,vol=0.4){
   const s=AC.createBufferSource(),g=AC.createGain();
   s.buffer=buf;s.connect(g);g.connect(AC.destination);
   g.gain.value=vol;s.start();}catch(e){}
-}
-function startBGM(){
-  try{
-    const bass=AC.createOscillator(), bassG=AC.createGain();
-    bass.type='sawtooth';bass.frequency.value=55;
-    bassG.gain.value=0.03;bass.connect(bassG);bassG.connect(AC.destination);bass.start();
-    const pad=AC.createOscillator(), padG=AC.createGain();
-    pad.type='sine';pad.frequency.value=110;
-    padG.gain.value=0.02;pad.connect(padG);padG.connect(AC.destination);pad.start();
-    const pad2=AC.createOscillator(), pad2G=AC.createGain();
-    pad2.type='sine';pad2.frequency.value=82.4;
-    pad2G.gain.value=0.015;pad2.connect(pad2G);pad2G.connect(AC.destination);pad2.start();
-  }catch(e){}
 }
 let bgmStarted=false;
 const sfx={
@@ -580,7 +567,7 @@ function drawBG(){
 
 // ── HUD ───────────────────────────────────────────────────────────────────────
 function drawHUD(){
-  if(gameState!=='fight'&&gameState!=='roundover')return;
+  if(gameState==='menu'||gameState==='select')return;
   const BW=300, BH=26, BY=18;
   // dark backing panel behind HUD
   ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fillRect(10,8,BW+22,BH+32);
@@ -811,16 +798,16 @@ function cpuAI(cpu,opp){
   cpu.vx=0;const r=Math.random();
   if(dist>180){cpu.cpuIntent='approach';cpu.cpuTimer=15+Math.random()*10|0;}
   else if(dist<65){
-    if(r<.10&&cpu.specCd<=0)doSpecial(cpu);
-    else if(r<.38){cpu.state='punch';cpu.stateTimer=15;cpu.atkBox=atkBoxFor(cpu,'punch');}
-    else if(r<.60){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
-    else if(r<.72){cpu.blocking=true;cpu.state='block';cpu.cpuTimer=12+Math.random()*10|0;cpu.cpuIntent='block';}
-    else{cpu.cpuIntent='retreat';cpu.cpuTimer=10;}
+    if(r<.07&&cpu.specCd<=0)doSpecial(cpu);
+    else if(r<.25){cpu.state='punch';cpu.stateTimer=15;cpu.atkBox=atkBoxFor(cpu,'punch');}
+    else if(r<.42){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
+    else if(r<.58){cpu.blocking=true;cpu.state='block';cpu.cpuTimer=14+Math.random()*10|0;cpu.cpuIntent='block';}
+    else{cpu.cpuIntent='retreat';cpu.cpuTimer=18;}
   } else {
-    if(r<.08&&cpu.specCd<=0)doSpecial(cpu);
-    else if(r<.30){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
-    else if(r<.42&&cpu.onGround){cpu.vy=JUMP_VY;cpu.onGround=false;cpu.state='jump';cpu.cpuTimer=8;}
-    else{cpu.cpuIntent='approach';cpu.cpuTimer=12;}
+    if(r<.06&&cpu.specCd<=0)doSpecial(cpu);
+    else if(r<.22){cpu.state='kick';cpu.stateTimer=19;cpu.atkBox=atkBoxFor(cpu,'kick');}
+    else if(r<.34&&cpu.onGround){cpu.vy=JUMP_VY;cpu.onGround=false;cpu.state='jump';cpu.cpuTimer=8;}
+    else{cpu.cpuIntent='approach';cpu.cpuTimer=18;}
   }
 }
 
@@ -1097,8 +1084,8 @@ function showMenu(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-document.getElementById('btn-1p').onclick=()=>{mode='cpu';hideAllScreens();showSelect();AC.resume().then(()=>{if(!bgmStarted){bgmStarted=true;startBGM();}});};
-document.getElementById('btn-2p').onclick=()=>{mode='2p'; hideAllScreens();showSelect();AC.resume().then(()=>{if(!bgmStarted){bgmStarted=true;startBGM();}});};
+document.getElementById('btn-1p').onclick=()=>{mode='cpu';hideAllScreens();showSelect();AC.resume();};
+document.getElementById('btn-2p').onclick=()=>{mode='2p'; hideAllScreens();showSelect();AC.resume();};
 document.addEventListener('click',e=>{
   if(e.target.id==='btn-fight'){hideAllScreens();wins=[0,0];round=1;startFight();}
   if(e.target.id==='btn-back'){hideAllScreens();showMenu();}
