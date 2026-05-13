@@ -47,6 +47,7 @@ const sfx={
   die:   ()=>{[0,.15,.3,.5].forEach((d,i)=>tone([300,240,180,100][i],'sawtooth',.3,.4,d))},
   start: ()=>{[0,.1,.2,.35].forEach((d,i)=>tone([262,330,392,523][i],'square',.28,.22,d))},
   slide: ()=>{tone(180,'square',.1,.15)},
+  throw_:()=>{tone(900,'sawtooth',.04,.14);tone(600,'sawtooth',.03,.09,.03)},
 };
 
 // ── BGM ──────────────────────────────────────────────────────────────────────
@@ -237,7 +238,7 @@ const pl={
   onGround:true,
 };
 
-let obstacles=[],coins=[],particles=[],texts=[];
+let obstacles=[],coins=[],particles=[],texts=[],monsters=[],projectiles=[];
 let sc1=0,sc2=0,sc3=0,sc4=0;
 
 function rng(seed){seed=Math.sin(seed*127.1+311.7)*43758.5453;return seed-Math.floor(seed);}
@@ -295,6 +296,7 @@ function update(){
   const gap=Math.max(55,110-Math.floor(dist/180));
   if(fc%gap===0)spawnObstacle();
   if(fc%52===0)spawnCoin();
+  if(fc%200===0&&dist>400&&Math.random()<0.75)spawnMonster();
 
   for(let i=obstacles.length-1;i>=0;i--){
     const o=obstacles[i];
@@ -322,6 +324,31 @@ function update(){
   for(let i=texts.length-1;i>=0;i--){
     texts[i].y-=0.6;texts[i].life--;
     if(texts[i].life<=0)texts.splice(i,1);
+  }
+  for(let i=projectiles.length-1;i>=0;i--){
+    const p=projectiles[i];
+    p.x+=p.vx;
+    if(p.x>W+60){projectiles.splice(i,1);continue;}
+    let killed=false;
+    for(let j=monsters.length-1;j>=0;j--){
+      const m=monsters[j];
+      if(Math.abs(p.x-m.x)<28&&Math.abs(p.y-(GY-32))<38){
+        score+=15;sfx.coin();
+        burst(m.x,GY-32,'#ff5500',14);
+        spawnText(m.x,GY-72,'+15','#ff9955');
+        monsters.splice(j,1);killed=true;break;
+      }
+    }
+    if(killed)projectiles.splice(i,1);
+  }
+  for(let i=monsters.length-1;i>=0;i--){
+    const m=monsters[i];
+    m.x-=spd*0.65+1.2;m.tick++;
+    if(m.x<-70){monsters.splice(i,1);continue;}
+    if(invincible===0){
+      const ph=pl.sliding?28:54;
+      if(pl.x+10>m.x-18&&pl.x-10<m.x+18&&pl.y>GY-60&&pl.y-ph<GY)hit();
+    }
   }
 }
 
@@ -361,6 +388,13 @@ function doSlide(){
   sfx.slide();burst(pl.x,pl.y,'#8888ff',4);
 }
 
+function doThrow(){
+  if(state!=='play')return;
+  if(projectiles.length>=2)return;
+  sfx.throw_();
+  projectiles.push({x:pl.x+22,y:pl.y-32,vx:16,r:7});
+}
+
 // ── SPAWN ─────────────────────────────────────────────────────────────────────
 function spawnObstacle(){
   const r=Math.random();
@@ -384,6 +418,10 @@ function spawnCoin(){
   coins.push({x:W+30,y,t:Math.random()*62|0});
 }
 
+function spawnMonster(){
+  monsters.push({x:W+90,tick:0});
+}
+
 function burst(x,y,col,n=12){
   for(let i=0;i<n;i++){
     const a=Math.random()*Math.PI*2,s=1.5+Math.random()*3.5;
@@ -396,7 +434,7 @@ function spawnText(x,y,txt,col){texts.push({x,y,txt,col,life:50});}
 
 function startGame(){
   state='play';dist=0;score=0;spd=5.5;fc=0;invincible=0;lives=3;
-  obstacles=[];coins=[];particles=[];texts=[];
+  obstacles=[];coins=[];particles=[];texts=[];monsters=[];projectiles=[];
   pl.y=GY;pl.vy=0;pl.jumps=0;pl.sliding=false;pl.slideTicks=0;
   pl.anim=0;pl.animTick=0;pl.onGround=true;
   sc1=sc2=sc3=sc4=0;
@@ -415,7 +453,9 @@ function draw(){
   drawGround();
   if(state!=='menu'){
     drawObstacles();
+    drawMonsters();
     drawCoins();
+    drawProjectiles();
     drawParticlesFn();
     drawPlayer();
     drawTextsFn();
@@ -1011,6 +1051,75 @@ function drawShuriken(o){
   ctx.restore();
 }
 
+// ── DRAW MONSTERS ────────────────────────────────────────────────────────────
+function drawMonsters(){
+  monsters.forEach(m=>{
+    const walk=(m.tick%24)/24*Math.PI*2;
+    const bob=Math.sin(walk*2)*2.5;
+    ctx.save();
+    ctx.translate(m.x,GY);
+    // Ground shadow
+    ctx.fillStyle='rgba(0,0,0,0.28)';
+    ctx.beginPath();ctx.ellipse(0,1,17,4,0,0,Math.PI*2);ctx.fill();
+    // Legs (walking)
+    const la=Math.sin(walk)*0.55;
+    ctx.fillStyle='#6b0030';
+    ctx.save();ctx.translate(-6,-6);ctx.rotate(la);ctx.fillRect(-3,0,7,18);ctx.restore();
+    ctx.save();ctx.translate(6,-6);ctx.rotate(-la);ctx.fillRect(-4,0,7,18);ctx.restore();
+    // Body
+    ctx.fillStyle='#9b1a3f';
+    ctx.beginPath();ctx.ellipse(0,-28,14,19,0,0,Math.PI*2);ctx.fill();
+    // Arms (swinging)
+    const aa=Math.sin(walk+Math.PI)*0.5;
+    ctx.save();ctx.translate(-15,-30);ctx.rotate(-0.5+aa);ctx.fillRect(-3,-2,7,16);ctx.restore();
+    ctx.save();ctx.translate(15,-30);ctx.rotate(0.5-aa);ctx.fillRect(-4,-2,7,16);ctx.restore();
+    // Head (bobs separately)
+    ctx.translate(0,bob);
+    ctx.fillStyle='#d43050';
+    ctx.beginPath();ctx.ellipse(0,-52,13,14,0,0,Math.PI*2);ctx.fill();
+    // Horns
+    ctx.fillStyle='#1a0808';
+    ctx.beginPath();ctx.moveTo(-7,-63);ctx.lineTo(-4,-80);ctx.lineTo(-1,-64);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(1,-64);ctx.lineTo(4,-80);ctx.lineTo(7,-63);ctx.closePath();ctx.fill();
+    // Glowing eyes
+    ctx.shadowColor='#ff4400';ctx.shadowBlur=12;
+    ctx.fillStyle='#ff4400';
+    ctx.beginPath();ctx.ellipse(-4,-54,3.5,2.5,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(4,-54,3.5,2.5,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;
+    // Fangs
+    ctx.fillStyle='#ffe8d0';
+    ctx.beginPath();ctx.moveTo(-5,-46);ctx.lineTo(-2,-41);ctx.lineTo(0,-46);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,-46);ctx.lineTo(3,-41);ctx.lineTo(5,-46);ctx.closePath();ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── DRAW PROJECTILES ─────────────────────────────────────────────────────────
+function drawProjectiles(){
+  projectiles.forEach(p=>{
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(fc*0.28);
+    const R=p.r;
+    ctx.shadowColor='#88ddff';ctx.shadowBlur=14;
+    ctx.fillStyle='#c8eeff';
+    for(let i=0;i<4;i++){
+      ctx.save();ctx.rotate(Math.PI*0.5*i);
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.quadraticCurveTo(R*0.45,-R*0.55,R*0.15,-R);
+      ctx.quadraticCurveTo(-R*0.45,-R*0.45,0,0);
+      ctx.closePath();ctx.fill();
+      ctx.restore();
+    }
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#eef8ff';
+    ctx.beginPath();ctx.arc(0,0,R*0.3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+}
+
 // ── DRAW COINS ───────────────────────────────────────────────────────────────
 function drawCoins(){
   coins.forEach(c=>{
@@ -1289,6 +1398,12 @@ function drawHUD(){
   ctx.save();ctx.shadowColor=barCol;ctx.shadowBlur=4;
   ctx.fillStyle=barCol;ctx.fillRect(barX,barY,pct*barW,3);
   ctx.restore();
+  // Throw key hint
+  ctx.save();ctx.textAlign='center';
+  ctx.fillStyle='rgba(160,200,255,0.42)';
+  ctx.font='9px Courier New';
+  ctx.fillText('[ X ] throw  ·  tap right →',W/2,37);
+  ctx.restore();
 }
 
 function roundPill(ctx,x,y,w,h,r,stroke=false){
@@ -1413,9 +1528,14 @@ function onAction(){
 document.addEventListener('keydown',e=>{
   if([' ','ArrowUp'].includes(e.key)){e.preventDefault();onAction();}
   if(['ArrowDown','s','S'].includes(e.key)){e.preventDefault();if(state==='play')doSlide();}
+  if(['x','X'].includes(e.key)){e.preventDefault();doThrow();}
 });
 document.addEventListener('click',onAction);
-document.addEventListener('touchstart',e=>{e.preventDefault();onAction();},{passive:false});
+document.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(state!=='play'){onAction();return;}
+  e.touches[0].clientX<window.innerWidth/2?doJump():doThrow();
+},{passive:false});
 
 requestAnimationFrame(loop);
 </script>
